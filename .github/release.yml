@@ -1,0 +1,23 @@
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+  categories:
+    - title: Breaking Changes
+      labels:
+        - breaking
+    - title: Features
+      labels:
+        - enhancement
+    - title: Bug Fixes
+      labels:
+        - bug
+    - title: Build System
+      labels:
+        - build
+    - title: Patches
+      labels:
+        - patches
+    - title: Other Changes
+      labels:
+        - "*"

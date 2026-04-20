@@ -1,0 +1,140 @@
+name: Validate
+run-name: Validate · ${{ github.ref_name }}
+
+on:
+  push:
+    branches: ['**']
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  script-syntax:
+    runs-on: ubuntu-latest
+    name: Bash syntax check
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check build script syntax
+        run: |
+          failed=0
+          for script in build/*.sh; do
+            echo "Checking $script..."
+            if ! bash -n "$script"; then
+              echo "FAIL: $script has syntax errors"
+              failed=1
+            fi
+          done
+          if [ "$failed" -ne 0 ]; then
+            echo "One or more scripts have syntax errors"
+            exit 1
+          fi
+          echo "All scripts pass syntax check"
+
+  seed-validation:
+    runs-on: ubuntu-latest
+    name: Seed file validation
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate seed files
+        run: |
+          python3 - <<'PYEOF'
+          from pathlib import Path
+          import re, sys
+
+          errors = []
+          required_locks = [
+              'CONFIG_LINUX_6_6=y',
+              'CONFIG_TARGET_ARCH_PACKAGES="aarch64_cortex-a53"',
+          ]
+          required_wifi = [
+              'CONFIG_PACKAGE_kmod-mt7996-firmware=y',
+              'CONFIG_PACKAGE_atenl=y',
+          ]
+
+          for seed in sorted(Path('seed').glob('*.seed')):
+              text = seed.read_text()
+              lines = text.splitlines()
+
+              # Check for line number pollution
+              bad_lines = [i+1 for i, l in enumerate(lines) if re.match(r'^\s*\d+\|', l)]
+              if bad_lines:
+                  errors.append(f"{seed}: line number pollution at lines {bad_lines}")
+
+              # Check required locks
+              for lock in required_locks:
+                  if lock not in text:
+                      errors.append(f"{seed}: missing lock '{lock}'")
+
+              # Check WiFi packages in full/pro/nand (not minimal)
+              if 'minimal' not in seed.name:
+                  for pkg in required_wifi:
+                      if pkg not in text:
+                          errors.append(f"{seed}: missing package '{pkg}'")
+
+              print(f"  {seed.name}: {len(lines)} lines, OK")
+
+          if errors:
+              print("\nValidation errors:")
+              for e in errors:
+                  print(f"  ERROR: {e}")
+              sys.exit(1)
+          print("\nAll seed files valid.")
+          PYEOF
+
+  patch-structure:
+    runs-on: ubuntu-latest
+    name: Patch structure check
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check patch directories
+        run: |
+          expected_dirs=(
+            patches/kernel/tcp
+            patches/kernel/fq
+            patches/kernel/cc
+            patches/kernel/netfast
+            patches/kernel/bbr3
+            patches/kernel/lrng
+            patches/kernel/arm
+            patches/kernel/wg
+            patches/kernel/btf
+            patches/kernel/sfe
+            patches/kernel/bcmfullcone
+            patches/kernel/mtk_wifi
+            patches/packages/firewall
+            patches/packages/miniupnpd
+            patches/packages/odhcp6c
+            patches/packages/cgroupfs-mount
+            patches/files
+            patches/gpt
+          )
+
+          failed=0
+          for d in "${expected_dirs[@]}"; do
+            count=$(find "$d" -type f 2>/dev/null | wc -l)
+            if [ "$count" -eq 0 ]; then
+              echo "EMPTY: $d"
+              failed=1
+            else
+              echo "  $d: $count files"
+            fi
+          done
+
+          if [ "$failed" -ne 0 ]; then
+            echo "One or more patch directories are empty"
+            exit 1
+          fi
+          echo "All patch directories populated."

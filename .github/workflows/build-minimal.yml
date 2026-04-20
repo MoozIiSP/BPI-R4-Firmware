@@ -1,0 +1,180 @@
+name: Build — Minimal BPI-R4
+run-name: Minimal BPI-R4 · ${{ inputs.media }} · ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      media:
+        description: "Boot medium (sd or emmc)"
+        required: false
+        type: string
+        default: "sd"
+  push:
+    branches: [phase/05-ci-workflows]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bpi-r4-minimal-${{ github.ref }}-${{ github.event.inputs.media || 'sd' }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: self-hosted
+    env:
+      SEED_VARIANT: bpi-r4-minimal
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          clean: false
+
+      - name: Cache OpenWrt build directories
+        uses: actions/cache@v4
+        with:
+          path: |
+            openwrt/dl
+            openwrt/staging_dir
+            openwrt/build_dir
+            bl-mt798x-dhcpd
+          key: ${{ runner.os }}-openwrt-minimal-${{ hashFiles('build/01_clone_minimal.sh', 'build/02_prepare_minimal.sh', 'build/03_target_minimal.sh', 'seed/bpi-r4-minimal.seed') }}
+          restore-keys: |
+            ${{ runner.os }}-openwrt-minimal-
+
+      - name: Build with Podman
+        id: compile
+        continue-on-error: true
+        env:
+          INPUT_MEDIA: ${{ inputs.media || 'sd' }}
+        run: |
+          CURRENT_UID=$(id -u)
+          CURRENT_GID=$(id -g)
+
+          # Resolve GPT layout
+          if [ "$INPUT_MEDIA" = "emmc" ]; then
+            GPT_LAYOUT="bpi-r4-emmc-8g-ab.json"
+          else
+            GPT_LAYOUT="bpi-r4-sd-ab.json"
+          fi
+
+          # Write build script to file (avoids YAML heredoc indentation issues)
+          cat > build_script.sh <<'INTERNAL_SCRIPT'
+          set -euo pipefail
+          export DEBIAN_FRONTEND=noninteractive
+          if [ "$(id -u)" = "0" ]; then
+            export FORCE_UNSAFE_CONFIGURE=1
+          fi
+
+          # 1. Install dependencies
+          apt-get -o Acquire::Languages=none update -qq
+          apt-get install -y -qq --no-install-recommends \
+            asciidoc bash bin86 binutils bison bzip2 clang file flex g++ g++-multilib gawk \
+            gcc-multilib gettext git curl gzip help2man intltool jq libbpf-dev libelf-dev \
+            libncurses-dev libssl-dev libthread-queue-any-perl libusb-dev libxml-parser-perl \
+            make patch perl-modules pkg-config python3-dev python3-pip python3-pyelftools \
+            python3-setuptools rsync sharutils swig time unzip util-linux wget xsltproc \
+            xz-utils zlib1g-dev zip zstd dwarves dos2unix bc llvm quilt
+
+          pip3 install --user -U pylibfdt --break-system-packages
+
+          # 2. Execute build scripts
+          chmod +x build/*.sh
+
+          echo "=== Step 1: Clone sources ==="
+          bash build/01_clone_minimal.sh
+
+          echo "=== Step 2: Prepare packages ==="
+          cd openwrt
+          bash ../build/02_prepare_minimal.sh
+
+          echo "=== Step 3: Target config ==="
+          bash ../build/03_target_minimal.sh
+
+          echo "=== Step 4: Seed config ==="
+          cp -rf ../seed/bpi-r4-minimal.seed .config
+
+          echo "=== Step 5: Defconfig ==="
+          make defconfig
+
+          echo "=== Step 6: Narrow bootloader for $INPUT_MEDIA ==="
+          sed -i \
+            -e '/^CONFIG_PACKAGE_trusted-firmware-a-mt7988-emmc-comb=/d' \
+            -e '/^CONFIG_PACKAGE_trusted-firmware-a-mt7988-sdmmc-comb=/d' \
+            -e '/^CONFIG_PACKAGE_trusted-firmware-a-mt7988-spim-nand-ubi-comb=/d' \
+            -e '/^CONFIG_PACKAGE_u-boot-mt7988_bananapi_bpi-r4-emmc=/d' \
+            -e '/^CONFIG_PACKAGE_u-boot-mt7988_bananapi_bpi-r4-sdmmc=/d' \
+            -e '/^CONFIG_PACKAGE_u-boot-mt7988_bananapi_bpi-r4-snand=/d' \
+            .config
+
+          case "$INPUT_MEDIA" in
+            emmc)
+              printf '%s\n' \
+                '# CONFIG_PACKAGE_trusted-firmware-a-mt7988-sdmmc-comb is not set' \
+                '# CONFIG_PACKAGE_trusted-firmware-a-mt7988-spim-nand-ubi-comb is not set' \
+                '# CONFIG_PACKAGE_u-boot-mt7988_bananapi_bpi-r4-sdmmc is not set' \
+                '# CONFIG_PACKAGE_u-boot-mt7988_bananapi_bpi-r4-snand is not set' \
+                'CONFIG_PACKAGE_trusted-firmware-a-mt7988-emmc-comb=y' \
+                'CONFIG_PACKAGE_u-boot-mt7988_bananapi_bpi-r4-emmc=y' >> .config
+              ;;
+            sd|*)
+              printf '%s\n' \
+                '# CONFIG_PACKAGE_trusted-firmware-a-mt7988-emmc-comb is not set' \
+                '# CONFIG_PACKAGE_trusted-firmware-a-mt7988-spim-nand-ubi-comb is not set' \
+                '# CONFIG_PACKAGE_u-boot-mt7988_bananapi_bpi-r4-emmc is not set' \
+                '# CONFIG_PACKAGE_u-boot-mt7988_bananapi_bpi-r4-snand is not set' \
+                'CONFIG_PACKAGE_trusted-firmware-a-mt7988-sdmmc-comb=y' \
+                'CONFIG_PACKAGE_u-boot-mt7988_bananapi_bpi-r4-sdmmc=y' >> .config
+              ;;
+          esac
+
+          echo "=== Step 7: Download ==="
+          make download -j$(nproc)
+
+          echo "=== Step 8: Compile ==="
+          set +e
+          IGNORE_ERRORS=1 make -j$(nproc)
+          build_status=$?
+          set -e
+
+          if [ "$build_status" -ne 0 ]; then
+            echo "=== Build failed, verbose retry ==="
+            make -j1 V=s || true
+            exit "$build_status"
+          fi
+
+          # Fix permissions (Podman runs as root)
+          if [ "$(id -u)" = "0" ]; then
+            chown -R $CURRENT_UID:$CURRENT_GID /build || true
+          fi
+          INTERNAL_SCRIPT
+
+          podman run --rm \
+            -v ${{ github.workspace }}:/build \
+            -w /build \
+            -e CURRENT_UID=$CURRENT_UID \
+            -e CURRENT_GID=$CURRENT_GID \
+            -e BPI_R4_GPT_LAYOUT=$GPT_LAYOUT \
+            ubuntu:24.04 \
+            bash build_script.sh
+
+      - name: Upload .config
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: config-${{ inputs.media || 'sd' }}
+          path: openwrt/.config
+          retention-days: 7
+
+      - name: Upload build artifacts
+        if: steps.compile.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ inputs.media || 'sd' }}
+          path: |
+            openwrt/bin/targets/mediatek/filogic/
+          retention-days: 14
+
+      - name: Fail job if build failed
+        if: ${{ always() && steps.compile.outcome == 'failure' }}
+        run: exit 1
