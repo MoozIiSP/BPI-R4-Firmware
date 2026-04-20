@@ -105,7 +105,6 @@ jobs:
             patches/kernel/tcp
             patches/kernel/fq
             patches/kernel/perf-cc
-            patches/kernel/perf-netfast
             patches/kernel/bbr3
             patches/kernel/lrng
             patches/kernel/arm
