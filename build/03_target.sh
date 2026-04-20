@@ -5,12 +5,24 @@ set -euo pipefail
 # 03_target.sh — Target-specific configuration for BPI-R4
 # =============================================================================
 # MUST run from inside the openwrt/ directory: cd openwrt && ../build/03_target.sh
+# Usage: cd openwrt && bash ../build/03_target.sh [--variant full|minimal]
+# (Both variants use the same target config logic)
 # =============================================================================
 
 cd "$(dirname "$0")/../../openwrt" 2>/dev/null || {
   echo "[TARGET] ERROR: Must run from repo root as: cd openwrt && ../build/03_target.sh" >&2
   exit 1
 }
+
+# --- Argument parsing (accepted but logic is the same for both) ----------------
+VARIANT="full"
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --variant|-v) VARIANT="$2"; shift 2 ;;
+    --help|-h) echo "Usage: $0 [--variant full|minimal]"; exit 0 ;;
+    *) ;; # ignore
+  esac
+done
 
 sed_in_place() {
   if sed --version >/dev/null 2>&1; then

@@ -113,7 +113,7 @@ jobs:
             patches/kernel/btf
             patches/kernel/sfe
             patches/kernel/bcmfullcone
-            patches/kernel/mtk_wifi
+            patches/kernel/mtk-wifi
             patches/packages/firewall
             patches/packages/miniupnpd
             patches/packages/odhcp6c

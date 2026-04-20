@@ -10,7 +10,12 @@ on:
         type: string
         default: "sd"
   push:
-    branches: [phase/05-ci-workflows]
+    branches: ['phase/*']
+    paths:
+      - 'build/**'
+      - 'seed/**'
+      - 'patches/**'
+      - '.github/workflows/build-minimal.yml'
 
 permissions:
   contents: read
@@ -22,8 +27,6 @@ concurrency:
 jobs:
   build:
     runs-on: self-hosted
-    env:
-      SEED_VARIANT: bpi-r4-minimal
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,7 +41,7 @@ jobs:
             openwrt/staging_dir
             openwrt/build_dir
             bl-mt798x-dhcpd
-          key: ${{ runner.os }}-openwrt-minimal-${{ hashFiles('build/01_clone_minimal.sh', 'build/02_prepare_minimal.sh', 'build/03_target_minimal.sh', 'seed/bpi-r4-minimal.seed') }}
+          key: ${{ runner.os }}-openwrt-minimal-${{ hashFiles('build/*.sh', 'seed/*.seed') }}
           restore-keys: |
             ${{ runner.os }}-openwrt-minimal-
 
@@ -53,9 +56,9 @@ jobs:
 
           # Resolve GPT layout
           if [ "$INPUT_MEDIA" = "emmc" ]; then
-            GPT_LAYOUT="bpi-r4-emmc-8g-ab.json"
+            GPT_LAYOUT="emmc-8g-ab.json"
           else
-            GPT_LAYOUT="bpi-r4-sd-ab.json"
+            GPT_LAYOUT="sd-ab.json"
           fi
 
           # Write build script to file (avoids YAML heredoc indentation issues)
@@ -78,21 +81,21 @@ jobs:
 
           pip3 install --user -U pylibfdt --break-system-packages
 
-          # 2. Execute build scripts
+          # 2. Execute build pipeline
           chmod +x build/*.sh
 
           echo "=== Step 1: Clone sources ==="
-          bash build/01_clone_minimal.sh
+          bash build/01_clone.sh --variant minimal
 
           echo "=== Step 2: Prepare packages ==="
           cd openwrt
-          bash ../build/02_prepare_minimal.sh
+          bash ../build/02_prepare.sh --variant minimal
 
           echo "=== Step 3: Target config ==="
-          bash ../build/03_target_minimal.sh
+          bash ../build/03_target.sh --variant minimal
 
           echo "=== Step 4: Seed config ==="
-          cp -rf ../seed/bpi-r4-minimal.seed .config
+          cp -rf ../seed/minimal.seed .config
 
           echo "=== Step 5: Defconfig ==="
           make defconfig
