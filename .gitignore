@@ -1,0 +1,46 @@
+# Build artifacts
+openwrt/
+openwrt_snap/
+bl-mt798x-dhcpd/
+lede/
+lede_pkg_ma/
+openwrt_ma/
+openwrt_pkg_ma/
+OpenWrt-Add/
+dockerman/
+docker_lib/
+luci_theme_design_repo/
+mtk-feed/
+
+# Generated files
+*.img
+*.bin
+*.zip
+*.tar.gz
+*.sha256sum
+.config.old
+.vermagic
+profiles.json
+
+# OS / Editor
+.DS_Store
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Temp
+*.tmp
+*.log
+
+# Validation reports
+bpi-r4-validation-report/
+
+# Node
+node_modules/
