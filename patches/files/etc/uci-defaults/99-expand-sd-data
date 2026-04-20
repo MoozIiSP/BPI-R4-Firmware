@@ -1,0 +1,66 @@
+#!/bin/sh
+
+LOG_TAG="bpi-r4-sd-expand"
+DISK="/dev/mmcblk0"
+TYPE_FILE="/sys/class/block/mmcblk0/device/type"
+MARKER="/etc/.sd-data-expanded"
+
+log() {
+    logger -t "$LOG_TAG" "$*" 2>/dev/null || echo "[$LOG_TAG] $*"
+}
+
+cleanup() {
+    touch "$MARKER" 2>/dev/null || true
+    exit 0
+}
+
+[ -f "$MARKER" ] && exit 0
+[ -b "$DISK" ] || exit 0
+[ -f "$TYPE_FILE" ] || exit 0
+[ "$(cat "$TYPE_FILE" 2>/dev/null)" = "SD" ] || exit 0
+command -v parted >/dev/null 2>&1 || { log "parted not found, skipping auto-expand"; cleanup; }
+command -v block >/dev/null 2>&1 || { log "block utility not found, skipping auto-expand"; cleanup; }
+
+PARTNUM="$(ls /sys/class/block/mmcblk0/ 2>/dev/null | sed -n 's/^mmcblk0p//p' | sort -n | tail -1)"
+[ -n "$PARTNUM" ] || { log "no partition found on SD"; cleanup; }
+PART="${DISK}p${PARTNUM}"
+[ -b "$PART" ] || { log "target partition $PART not found"; cleanup; }
+
+TOTAL_SECTORS="$(cat /sys/class/block/mmcblk0/size 2>/dev/null)"
+CURRENT_END="$(parted -ms "$DISK" unit s print 2>/dev/null | awk -F: -v pn="$PARTNUM" '$1==pn {gsub("s", "", $3); print $3}')"
+[ -n "$TOTAL_SECTORS" ] && [ -n "$CURRENT_END" ] || { log "unable to read partition geometry"; cleanup; }
+
+TARGET_END=$((TOTAL_SECTORS - 34))
+if [ "$CURRENT_END" -ge "$TARGET_END" ]; then
+    log "SD data partition already fills available space"
+    cleanup
+fi
+
+log "expanding $PART to sector $TARGET_END"
+parted -s "$DISK" unit s resizepart "$PARTNUM" "${TARGET_END}s" || {
+    log "resizepart failed"
+    cleanup
+}
+
+blockdev --rereadpt "$DISK" 2>/dev/null || true
+sleep 2
+
+if [ ! -b "$PART" ]; then
+    log "partition node missing after resize, waiting"
+    sleep 2
+fi
+
+FS_TYPE="$(block info "$PART" 2>/dev/null | sed -n 's/.*TYPE="\([^"]*\)".*/\1/p')"
+if [ "$FS_TYPE" = "ext4" ] || [ "$FS_TYPE" = "ext3" ] || [ "$FS_TYPE" = "ext2" ]; then
+    if command -v e2fsck >/dev/null 2>&1 && command -v resize2fs >/dev/null 2>&1; then
+        log "resizing filesystem on $PART ($FS_TYPE)"
+        e2fsck -pf "$PART" >/dev/null 2>&1 || true
+        resize2fs "$PART" >/dev/null 2>&1 || log "resize2fs failed; partition was still expanded"
+    else
+        log "e2fsprogs tools missing, only partition table was expanded"
+    fi
+else
+    log "filesystem on $PART is '$FS_TYPE'; skipped filesystem resize"
+fi
+
+cleanup

@@ -1,0 +1,47 @@
+{
+  "u-boot-env": {
+    "start": 8192,
+    "end": 9215,
+    "unique_part_guid": "{19a4763a-6b19-4a4b-a0c4-8cc34f4c2ab9}"
+  },
+  "factory": {
+    "start": 9216,
+    "end": 13311,
+    "unique_part_guid": "{8142c1b2-1697-41d9-b1bf-a88d76c7213f}"
+  },
+  "fip": {
+    "start": 13312,
+    "end": 17407,
+    "unique_part_guid": "{18de6587-4f17-4e08-a6c9-d9d3d424f4c5}"
+  },
+  "kernel_a": {
+    "start": 17408,
+    "end": 82943,
+    "unique_part_guid": "{971f7556-ef1a-44cd-8b28-0cf8100b9c7e}"
+  },
+  "rootfs_a": {
+    "start": 82944,
+    "end": 607231,
+    "unique_part_guid": "{309a3e76-270b-41b2-b5d5-ed8154e7542b}"
+  },
+  "kernel_b": {
+    "start": 607232,
+    "end": 672767,
+    "unique_part_guid": "{9c17fbc2-79aa-4600-80ce-989ef9c95909}"
+  },
+  "rootfs_b": {
+    "start": 672768,
+    "end": 1197055,
+    "unique_part_guid": "{f19609c8-f7d3-4ac6-b93e-7fd9fad4b4af}"
+  },
+  "rootfs_data": {
+    "start": 1197056,
+    "end": 3294207,
+    "unique_part_guid": "{a4a43b93-f17d-43e2-b7a7-df0bdf610c77}"
+  },
+  "data": {
+    "start": 3294208,
+    "end": 15499263,
+    "unique_part_guid": "{3c058515-54c3-452f-9b87-7a4f957b5cd1}"
+  }
+}
