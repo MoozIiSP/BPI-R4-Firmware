@@ -254,8 +254,8 @@ if [ "$VARIANT" = "full" ]; then
   cp -rf ../patches/kernel/tcp/* ./target/linux/generic/backport-6.6/ 2>/dev/null || true
   cp -rf ../patches/kernel/fq/* ./target/linux/generic/backport-6.6/ 2>/dev/null || true
   cp -rf ../patches/kernel/bbr3/* ./target/linux/generic/backport-6.6/ 2>/dev/null || true
-  cp -rf ../patches/kernel/cc/* ./target/linux/generic/hack-6.6/ 2>/dev/null || true
-  cp -rf ../patches/kernel/netfast/* ./target/linux/generic/hack-6.6/ 2>/dev/null || true
+  cp -rf ../patches/kernel/perf-cc/* ./target/linux/generic/hack-6.6/ 2>/dev/null || true
+  cp -rf ../patches/kernel/perf-netfast/* ./target/linux/generic/hack-6.6/ 2>/dev/null || true
   cp -rf ../patches/kernel/arm/* ./target/linux/generic/hack-6.6/ 2>/dev/null || true
   cp -rf ../patches/kernel/lrng/* ./target/linux/generic/hack-6.6/ 2>/dev/null || true
 

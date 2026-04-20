@@ -16,14 +16,14 @@ BUILD := $(REPO_ROOT)/build
 VARIANT ?= full
 
 .PHONY: full minimal validate clean help \
-        clone prepare target defconfig
+        clone prepare target defconfig download compile build-all
 
 help:
 	@echo "BPI-R4 Firmware Build System"
 	@echo ""
 	@echo "Targets:"
-	@echo "  make full       Full build (all packages + third-party repos)"
-	@echo "  make minimal    Minimal build (base + WiFi 7 + bootloader only)"
+	@echo "  make full       Full build (clone → compile)"
+	@echo "  make minimal    Minimal build (clone → compile)"
 	@echo "  make validate   Run local validation (syntax, seeds, patches)"
 	@echo "  make clean      Remove cloned source trees (keeps dl/cache)"
 	@echo "  make help       Show this help"
@@ -33,9 +33,12 @@ help:
 	@echo "  make prepare    Apply patches and configure feeds"
 	@echo "  make target     Target-specific configuration"
 	@echo "  make defconfig  Generate .config from seed"
+	@echo "  make download   Download source packages"
+	@echo "  make compile    Compile firmware (parallel)"
+	@echo "  make compile-verbose  Compile with full verbose output"
 	@echo ""
 	@echo "Example:"
-	@echo "  make minimal VARIANT=minimal"
+	@echo "  make minimal"
 
 full: VARIANT = full
 full: build-all
@@ -43,13 +46,21 @@ full: build-all
 minimal: VARIANT = minimal
 minimal: build-all
 
-build-all: clone prepare target defconfig
-	@echo ""
-	@echo "================================================================"
-	@echo "  Configuration ready. To compile:"
-	@echo "  cd openwrt && make download -j\$$(nproc)"
-	@echo "  cd openwrt && make -j\$$(nproc)   (or make -j1 V=s for debug)"
-	@echo "================================================================"
+build-all: clone prepare target defconfig download compile
+
+compile:
+	@echo "=== Compiling ($(VARIANT)) ==="
+	@echo "Running make -j\$$(nproc) in openwrt/..."
+	@echo "  For verbose output: make compile-verbose"
+	cd openwrt && make -j$$(nproc)
+
+compile-verbose:
+	@echo "=== Compiling verbose ($(VARIANT)) ==="
+	cd openwrt && make -j1 V=s
+
+download:
+	@echo "=== Downloading sources ($(VARIANT)) ==="
+	cd openwrt && make download -j$$(nproc)
 
 clone:
 	@echo "=== Cloning (variant: $(VARIANT)) ==="

@@ -104,8 +104,8 @@ jobs:
           expected_dirs=(
             patches/kernel/tcp
             patches/kernel/fq
-            patches/kernel/cc
-            patches/kernel/netfast
+            patches/kernel/perf-cc
+            patches/kernel/perf-netfast
             patches/kernel/bbr3
             patches/kernel/lrng
             patches/kernel/arm
