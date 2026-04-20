@@ -1,0 +1,28 @@
+### MINIMAL BPI-R4 VALIDATION ###
+CONFIG_TARGET_mediatek=y
+CONFIG_TARGET_mediatek_filogic=y
+CONFIG_TARGET_mediatek_filogic_DEVICE_bananapi_bpi-r4=y
+CONFIG_TARGET_ARCH_PACKAGES="aarch64_cortex-a53"
+CONFIG_TARGET_KERNEL_PARTSIZE=32
+CONFIG_TARGET_ROOTFS_INITRAMFS=n
+CONFIG_TARGET_ROOTFS_PARTSIZE=512
+CONFIG_LINUX_6_6=y
+# CONFIG_KERNEL_USB_XHCI_MTK_DEBUGFS is not set
+
+### MTK FEED VALIDATION ###
+CONFIG_PACKAGE_kmod-mt7996-firmware=y
+CONFIG_PACKAGE_kmod-mt7996-233-firmware=y
+CONFIG_PACKAGE_mt7988-wo-firmware=y
+CONFIG_PACKAGE_atenl=y
+
+### BOOTLOADER / IMAGE VALIDATION ###
+# Keep minimal validation focused on BPI-R4 / MT7988 only.
+# CONFIG_PACKAGE_trusted-firmware-a-mt7981-ram-ddr3 is not set
+# CONFIG_PACKAGE_trusted-firmware-a-mt7981-ram-ddr4 is not set
+# CONFIG_PACKAGE_trusted-firmware-a-mt7986-ram-ddr3 is not set
+# CONFIG_PACKAGE_trusted-firmware-a-mt7986-ram-ddr4 is not set
+# CONFIG_PACKAGE_trusted-firmware-a-mt7988-ram-comb is not set
+# CONFIG_PACKAGE_trusted-firmware-a-mt7988-spim-nand-ubi-comb is not set
+CONFIG_PACKAGE_trusted-firmware-a-mt7988-emmc-comb=y
+CONFIG_PACKAGE_trusted-firmware-a-mt7988-sdmmc-comb=y
+CONFIG_PACKAGE_uboot-envtools=y
