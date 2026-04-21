@@ -9,13 +9,6 @@ on:
         required: false
         type: string
         default: "sd"
-  push:
-    branches: ['phase/*']
-    paths:
-      - 'build/**'
-      - 'seed/**'
-      - 'patches/**'
-      - '.github/workflows/build-minimal.yml'
 
 permissions:
   contents: read
