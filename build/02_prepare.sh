@@ -357,7 +357,7 @@ fi
 # Final: Rootfs overlay + cleanup
 # ===========================================================================
 echo "[PREP] === Rootfs overlay ==="
-cp -rf ../files ./files
+cp -rf ../patches/files ./files
 
 find ./ -name '*.orig' -delete
 find ./ -name '*.rej' -delete

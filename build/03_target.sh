@@ -14,6 +14,14 @@ cd "$(dirname "$0")/../openwrt" 2>/dev/null || {
   exit 1
 }
 
+sed_in_place() {
+  if sed --version >/dev/null 2>&1; then
+    sed -i "$@"
+  else
+    sed -i '' "$@"
+  fi
+}
+
 # --- Argument parsing (accepted but logic is the same for both) ----------------
 VARIANT="full"
 while [[ $# -gt 0 ]]; do
@@ -24,13 +32,33 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-sed_in_place() {
-  if sed --version >/dev/null 2>&1; then
-    sed -i "$@"
-  else
-    sed -i '' "$@"
-  fi
-}
+# --- Auto-generate version from git tag ---
+echo "[TARGET] Generating version info from git tag"
+git_tag="$(git describe --tags --long 2>/dev/null || echo 'unknown')"
+# v24.10.6-0-gec8eeaa -> 24.10.6 (if exactly on tag) or 24.10.6-3-gabc1234
+if [[ "$git_tag" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)-0- ]]; then
+  version_number="${BASH_REMATCH[1]}"
+else
+  version_number="${git_tag#v}"
+fi
+# Parse commit count and hash from describe: v24.10.6-3-gabc1234 -> r3-abc1234
+if [[ "$git_tag" =~ v[0-9.]+-([0-9]+)-g([0-9a-f]+) ]]; then
+  version_code="r${BASH_REMATCH[1]}-${BASH_REMATCH[2]}"
+else
+  version_code="unknown"
+fi
+
+echo "[TARGET] VERSION_NUMBER=${version_number}"
+echo "[TARGET] VERSION_CODE=${version_code}"
+
+# Inject into .config if it exists, otherwise create entries
+if [ -f .config ]; then
+  sed_in_place "s/^CONFIG_VERSION_NUMBER=.*/CONFIG_VERSION_NUMBER=\"${version_number}\"/" .config
+  sed_in_place "s/^CONFIG_VERSION_CODE=.*/CONFIG_VERSION_CODE=\"${version_code}\"/" .config
+else
+  echo "CONFIG_VERSION_NUMBER=\"${version_number}\"" >> .config
+  echo "CONFIG_VERSION_CODE=\"${version_code}\"" >> .config
+fi
 
 # --- ARM crypto optimization ---
 echo "[TARGET] Applying ARM crypto optimization"
@@ -72,7 +100,7 @@ sed_in_place \
 
 # --- Rootfs overlay ---
 echo "[TARGET] Copying rootfs overlay"
-cp -rf ../files ./files
+cp -rf ../patches/files ./files
 
 # --- Cleanup ---
 find ./ -name '*.orig' -delete
