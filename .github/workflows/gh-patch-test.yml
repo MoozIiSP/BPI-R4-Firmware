@@ -26,12 +26,6 @@ jobs:
         with:
           clean: false
 
-      - name: Maximize build space
-        run: |
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL || true
-          sudo -E apt-get -o Acquire::Languages=none -qq update
-          df -h /
-
       - name: Install dependencies
         run: |
           sudo -E apt-get install -y -qq --no-install-recommends \
