@@ -56,7 +56,7 @@ echo "[CLONE] Resolved OpenWrt release: $OPENWRT_TAG"
 
 # --- Repository URLs ---------------------------------------------------------
 OPENWRT_REPO="https://github.com/openwrt/openwrt.git"
-BOOTLOADER_REPO="https://github.com/Yuzhii0718/bl-mt798x-dhcpd.git"
+BOOTLOADER_REPO="https://github.com/MoozIiSP/bl-mt798x-dhcpd.git"
 
 # Third-party repos (full variant only)
 LEDE_REPO="https://github.com/coolsnowwolf/lede.git"
