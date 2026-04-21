@@ -223,8 +223,8 @@ echo "[PREP] === Section 5: Build system optimizations ==="
 sed_in_place 's/Os/O2/g' include/target.mk
 sed_in_place 's,-SNAPSHOT,,g' include/version.mk
 sed_in_place 's,-SNAPSHOT,,g' package/base-files/image-config.in
-sed_in_place '/CONFIG_BUILDBOT/d' include/feeds.mk
-sed_in_place 's/;)\s*\\;/; \\/' include/feeds.mk
+# Remove CONFIG_BUILDBOT conditional block (2 lines: the $(if ...) and the echo line)
+perl -i -0pe 's/\$\(if\s+\$\(CONFIG_BUILDBOT\),.*\n.*\);[^\n]*//g' include/feeds.mk
 sed_in_place 's,-mcpu=generic,-march=armv8-a+crc+crypto,g' include/target.mk
 sed_in_place 's,CONFIG_WERROR=y,# CONFIG_WERROR is not set,g' target/linux/generic/config-6.6
 
