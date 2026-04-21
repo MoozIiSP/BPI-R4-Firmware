@@ -72,7 +72,7 @@ sed_in_place \
 
 # --- Rootfs overlay ---
 echo "[TARGET] Copying rootfs overlay"
-cp -rf ../patches/files ./files
+cp -rf ../files ./files
 
 # --- Cleanup ---
 find ./ -name '*.orig' -delete
