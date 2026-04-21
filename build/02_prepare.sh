@@ -200,6 +200,16 @@ if [ -d "../bl-mt798x-dhcpd" ]; then
   if [ "$atf_custom_applied" -eq 1 ]; then
     patch_custom_atf_sdmmc_flags "../bl-mt798x-dhcpd/atf-20260123/plat/mediatek/mt7988/bl2/bl2.mk" || true
   fi
+
+  # Fix uboot DTS patch labels: OpenWrt's patch 450 uses kernel-style labels
+  # (&eth, &pinctrl, &gpio) but u-boot's mt7988.dtsi uses (&eth0, &pio, &pio)
+  local uboot_patch="./package/boot/uboot-mediatek/patches/450-add-bpi-r4.patch"
+  if [ -f "$uboot_patch" ]; then
+    sed_in_place 's/+&eth {/+\&eth0 {/' "$uboot_patch"
+    sed_in_place 's/+&pinctrl {/+\&pio {/' "$uboot_patch"
+    sed_in_place 's/<&gpio /<\&pio /g' "$uboot_patch"
+    echo "[BOOT] Fixed uboot DTS patch labels for u-boot mt7988.dtsi compatibility"
+  fi
 else
   echo "[BOOT] Custom bootloader not found, using default OpenWrt sources"
 fi
