@@ -202,8 +202,8 @@ if [ -d "../bl-mt798x-dhcpd" ]; then
   fi
 
   # Fix uboot DTS patch labels: OpenWrt's patch 450 uses kernel-style labels
-  # (&eth, &pinctrl, &gpio) but u-boot's mt7988.dtsi uses (&eth0, &pio, &pio)
-  local uboot_patch="./package/boot/uboot-mediatek/patches/450-add-bpi-r4.patch"
+  # (&eth, &pinctrl, &gpio) but u-boot's mt7988.dtsi uses (&eth0, &pio, &gpio)
+  uboot_patch="./package/boot/uboot-mediatek/patches/450-add-bpi-r4.patch"
   if [ -f "$uboot_patch" ]; then
     sed_in_place 's/+&eth {/+\&eth0 {/' "$uboot_patch"
     sed_in_place 's/+&pinctrl {/+\&pio {/' "$uboot_patch"
