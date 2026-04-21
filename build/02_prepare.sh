@@ -12,8 +12,8 @@ set -euo pipefail
 # minimal — Minimal prep: feeds + bootloader + WiFi only (no third-party)
 # =============================================================================
 
-cd "$(dirname "$0")/../../openwrt" 2>/dev/null || {
-  echo "[PREP] ERROR: Must run from repo root as: cd openwrt && ../build/02_prepare.sh" >&2
+cd "$(dirname "$0")/../openwrt" 2>/dev/null || {
+  echo "[PREP] ERROR: Must run from repo root as: cd openwrt && bash ../build/02_prepare.sh" >&2
   exit 1
 }
 
@@ -33,7 +33,8 @@ sed_in_place() {
 }
 
 is_openwrt_package_wrapper() {
-  local pkg_dir="$1" makefile="$pkg_dir/Makefile"
+  local pkg_dir="$1"
+  local makefile="$pkg_dir/Makefile"
   [ -f "$makefile" ] || return 1
   grep -qE 'include \$\(TOPDIR\)/rules\.mk|BuildPackage|PKG_SOURCE_(PROTO|URL|DATE|VERSION)' "$makefile"
 }

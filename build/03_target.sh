@@ -9,8 +9,8 @@ set -euo pipefail
 # (Both variants use the same target config logic)
 # =============================================================================
 
-cd "$(dirname "$0")/../../openwrt" 2>/dev/null || {
-  echo "[TARGET] ERROR: Must run from repo root as: cd openwrt && ../build/03_target.sh" >&2
+cd "$(dirname "$0")/../openwrt" 2>/dev/null || {
+  echo "[TARGET] ERROR: Must run from repo root as: cd openwrt && bash ../build/03_target.sh" >&2
   exit 1
 }
 
