@@ -223,6 +223,11 @@ echo "[PREP] === Section 5: Build system optimizations ==="
 sed_in_place 's/Os/O2/g' include/target.mk
 sed_in_place 's,-SNAPSHOT,,g' include/version.mk
 sed_in_place 's,-SNAPSHOT,,g' package/base-files/image-config.in
+
+# Fix upstream OpenWrt feeds.mk: stray ')' in $(if ...) then-branch leaks into shell output.
+# Lines 40 and 53 end with `';) \` where the ) after ; appears as literal text in bash.
+# Remove the stray ): change `';) \n` to `'; \n`
+perl -i -pe "s/';\\) \\\\\\n/'; \\\\\\n/g" include/feeds.mk
 # Remove CONFIG_BUILDBOT conditional block (2 lines: the $(if ...) and the echo line)
 perl -i -0pe 's/\$\(if\s+\$\(CONFIG_BUILDBOT\),.*\n.*\);[^\n]*//g' include/feeds.mk
 sed_in_place 's,-mcpu=generic,-march=armv8-a+crc+crypto,g' include/target.mk
