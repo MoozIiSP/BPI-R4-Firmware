@@ -224,12 +224,17 @@ sed_in_place 's/Os/O2/g' include/target.mk
 sed_in_place 's,-SNAPSHOT,,g' include/version.mk
 sed_in_place 's,-SNAPSHOT,,g' package/base-files/image-config.in
 
-# Fix upstream OpenWrt feeds.mk: stray ')' in $(if ...) then-branch leaks into shell output.
-# Lines 40/53 end with `';) \\` (1 stray paren), lines 43/56 end with `';)))) \\` (4 stray).
-# Remove ALL stray ): change `';) \n` to `'; \n`
-perl -i -pe "s/';\\)+ \\\\\\n/'; \\\\\\n/g" include/feeds.mk
-# Remove CONFIG_BUILDBOT conditional block (2 lines: the $(if ...) and the echo line)
+# Fix upstream OpenWrt feeds.mk:
+# (1) FeedSourcesAppendOPKG/APK macros have unbalanced parentheses — the closing
+#     line `) >> $(1)` needs 5 `)` (4 for Make functions + 1 for shell subshell).
+#     Without this, stray `)` leaks into shell output causing bash syntax errors.
+# (2) Remove CONFIG_BUILDBOT conditional block if present.
+python3 "$(dirname "$0")/fix-feeds-mk.py"
 perl -i -0pe 's/\$\(if\s+\$\(CONFIG_BUILDBOT\),.*\n.*\);[^\n]*//g' include/feeds.mk
+# Fix base-files/Makefile: $(if ...) wrapping multiple recipe commands leaks
+# the closing ')' into shell output. Replace with separate $(if ...) per command.
+python3 "$(dirname "$0")/fix-base-files-makefile.py"
+
 sed_in_place 's,-mcpu=generic,-march=armv8-a+crc+crypto,g' include/target.mk
 sed_in_place 's,CONFIG_WERROR=y,# CONFIG_WERROR is not set,g' target/linux/generic/config-6.6
 
