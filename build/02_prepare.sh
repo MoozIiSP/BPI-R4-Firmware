@@ -80,7 +80,7 @@ configure_package_use_source_dir() {
 patch_custom_atf_sdmmc_flags() {
   local bl2_mk="$1"
   [ -f "$bl2_mk" ] || return 1
-  perl -0pi -e 's/ifeq \(\$\(BOOT_DEVICE\),sdmmc\)\n\$\(eval \$\(call BL2_BOOT_SD\)\)\nBL2_SOURCES\t\t\+=\t\+\$\(MTK_PLAT_SOC\)\/bl2\/bl2_dev_mmc\.c\nDEFINES\t\t\t\+=\t-DMSDC_INDEX=1\nDTS_NAME\t\t:=\tmt7988\nendif # END OF BOOTDEVICE = sdmmc/ifeq (\$(BOOT_DEVICE),sdmmc)\n\$(eval \$(call BL2_BOOT_SD))\nBL2_SOURCES\t\t+=\t\$(MTK_PLAT_SOC)\/bl2\/bl2_dev_mmc.c\nBL2_CPPFLAGS\t\t+=\t-DMSDC_INDEX=1\nDTS_NAME\t\t:=\tmt7988\nendif # END OF BOOTDEVICE = sdmmc/s' "$bl2_mk"
+  perl -pi -e 's/^DEFINES\s+\+=\s+-DMSDC_INDEX=1$/BL2_CPPFLAGS\t\t+=\t-DMSDC_INDEX=1/' "$bl2_mk"
   echo "[BOOT] Patched ATF sdmmc flags (DEFINES → BL2_CPPFLAGS)"
 }
 
@@ -96,6 +96,48 @@ ensure_file_has_line() {
   [ -f "$file_path" ] || return 1
   grep -Fqx "$line" "$file_path" || printf '%s\n' "$line" >> "$file_path"
   echo "$label: $(basename "$file_path") ← $line"
+}
+
+extract_new_file_from_patch() {
+  local patch_file="$1" source_rel="$2" dest_file="$3"
+  [ -f "$patch_file" ] || return 1
+  mkdir -p "$(dirname "$dest_file")"
+  awk -v target="b/$source_rel" '
+    $1 == "+++" && $2 == target { in_file=1; next }
+    in_file && $1 == "---" { exit }
+    in_file && /^@@/ { next }
+    in_file && substr($0, 1, 1) == "+" { print substr($0, 2) }
+  ' "$patch_file" > "$dest_file"
+  [ -s "$dest_file" ]
+}
+
+patch_custom_uboot_bpi_r4_compat() {
+  local uboot_dir="$1" uboot_patch="$2"
+  [ -d "$uboot_dir" ] || return 1
+  [ -f "$uboot_patch" ] || return 1
+
+  local dts_dir="$uboot_dir/arch/arm/dts"
+  extract_new_file_from_patch "$uboot_patch" \
+    "arch/arm/dts/mt7988a-bananapi-bpi-r4.dtsi" \
+    "$dts_dir/mt7988a-bananapi-bpi-r4.dtsi" || return 1
+  extract_new_file_from_patch "$uboot_patch" \
+    "arch/arm/dts/mt7988a-bananapi-bpi-r4-sd.dts" \
+    "$dts_dir/mt7988a-bananapi-bpi-r4-sd.dts" || return 1
+  extract_new_file_from_patch "$uboot_patch" \
+    "arch/arm/dts/mt7988a-bananapi-bpi-r4-emmc.dts" \
+    "$dts_dir/mt7988a-bananapi-bpi-r4-emmc.dts" || return 1
+
+  local dts_makefile="$dts_dir/Makefile"
+  if [ -f "$dts_makefile" ] && ! grep -Fq 'mt7988a-bananapi-bpi-r4-emmc.dtb' "$dts_makefile"; then
+    perl -0pi -e 's/(\s*mt7988-sd-rfb\.dtb \\\n)/$1\tmt7988a-bananapi-bpi-r4-emmc.dtb \\\n\tmt7988a-bananapi-bpi-r4-sd.dtb \\\n/' "$dts_makefile"
+  fi
+
+  for defconfig in "$uboot_dir"/configs/mt7988a_bananapi_bpi-r4*_defconfig; do
+    [ -f "$defconfig" ] || continue
+    perl -0pi -e 's/^CONFIG_BOARD_LATE_INIT=y$/# CONFIG_BOARD_LATE_INIT is not set/mg' "$defconfig"
+  done
+
+  echo "[BOOT] Patched custom U-Boot BPI-R4 DTS and BOARD_LATE_INIT compatibility"
 }
 
 # ===========================================================================
@@ -117,9 +159,117 @@ rewrite_feeds() {
 disable_mtk_feed() {
   for feed_file in feeds.conf feeds.conf.default; do
     [ -f "$feed_file" ] || continue
-    sed_in_place '/^src-\(git\|link\)\(-full\)\? mtk /d' "$feed_file"
+    sed_in_place '/^src-\(git\|link\)\(-full\)\? \(mtk\|mtk_openwrt_feed\) /d' "$feed_file"
   done
-  rm -rf ./feeds/mtk ./feeds/mtk.index
+  rm -rf ./feeds/mtk ./feeds/mtk.index ./feeds/mtk_openwrt_feed ./feeds/mtk_openwrt_feed.index
+}
+
+enable_mtk_feed() {
+  local feed_src="${BPI_R4_MTK_FEED:-https://git01.mediatek.com/openwrt/feeds/mtk-openwrt-feeds}"
+  for feed_file in feeds.conf feeds.conf.default; do
+    [ -f "$feed_file" ] || continue
+    sed_in_place '/^src-\(git\|link\)\(-full\)\? \(mtk\|mtk_openwrt_feed\) /d' "$feed_file"
+    printf 'src-git mtk_openwrt_feed %s\n' "$feed_src" >> "$feed_file"
+  done
+  echo "[FEEDS] Enabled MediaTek feed: $feed_src"
+}
+
+handle_mtk_patch_failure() {
+  local patch_file="$1"
+  local patch_name
+  patch_name="$(basename "$patch_file")"
+
+  local rfb_dts="./target/linux/mediatek/files-6.6/arch/arm64/boot/dts/mediatek/mt7988a-rfb.dts"
+  if [ "$patch_name" = "1000-arch-arm64-dts-add-fitblk-support-for-MediaTek-RFB.patch" ] &&
+     [ -f "$rfb_dts" ] &&
+     grep -Fq "ubi.block=0,firmware root=/dev/fit0" "$rfb_dts"; then
+    rm -f "$rfb_dts.rej"
+    echo "[MTK] Ignored already-satisfied mt7988a-rfb fitblk bootargs hunk"
+    return 0
+  fi
+
+  local dnsmasq_makefile="./package/network/services/dnsmasq/Makefile"
+  if [ "$patch_name" = "3200-package-dnsmasq-v2_91-upgrade.patch" ] &&
+     [ -f "$dnsmasq_makefile" ] &&
+     grep -Fq "PKG_UPSTREAM_VERSION:=2.90" "$dnsmasq_makefile"; then
+    perl -pi -e '
+      s/^PKG_UPSTREAM_VERSION:=.*/PKG_UPSTREAM_VERSION:=2.91/;
+      s/^PKG_RELEASE:=.*/PKG_RELEASE:=1/;
+      s/^PKG_HASH:=.*/PKG_HASH:=f622682848b33677adb2b6ad08264618a2ae0a01da486a93fd8cd91186b3d153/;
+    ' "$dnsmasq_makefile"
+    rm -f "$dnsmasq_makefile.rej"
+    echo "[MTK] Applied dnsmasq 2.91 metadata update despite release-context drift"
+    return 0
+  fi
+
+  return 1
+}
+
+apply_mtk_patch() {
+  local patch_file="$1"
+  patch -f -N -p1 -i "$patch_file" || handle_mtk_patch_failure "$patch_file"
+}
+
+copy_mtk_autobuild_dts_sources() {
+  local feed_dir="$1" release="$2"
+  local src_dir="$feed_dir/autobuild/unified/filogic/$release/files/target/linux/mediatek/files-6.6/arch/arm64/boot/dts/mediatek"
+  local dst_dir="./target/linux/mediatek/files-6.6/arch/arm64/boot/dts/mediatek"
+  [ -d "$src_dir" ] || return 0
+  mkdir -p "$dst_dir"
+  for pattern in '*.dts' '*.dtsi' '*.dtso'; do
+    find "$src_dir" -maxdepth 1 -name "$pattern" -print | while read -r dts_file; do
+      local dst_file="$dst_dir/$(basename "$dts_file")"
+      [ -f "$dst_file" ] || cp "$dts_file" "$dst_file"
+    done
+  done
+  echo "[MTK] Added missing unified filogic DTS sources for $release"
+}
+
+prune_mtk_minimal_reference_devices() {
+  [ "$VARIANT" = "minimal" ] || return 0
+  local filogic_mk="./target/linux/mediatek/image/filogic.mk"
+  [ -f "$filogic_mk" ] || return 0
+  sed_in_place '/^TARGET_DEVICES += mediatek_mt7988a-rfb-mxl86252$/d' "$filogic_mk"
+  echo "[MTK] Pruned non-BPI-R4 MT7988A RFB mxl86252 image target for minimal variant"
+}
+
+apply_mtk_feed_payload() {
+  local feed_dir="./feeds/mtk_openwrt_feed"
+  local release="${BPI_R4_MTK_FEED_RELEASE:-24.10}"
+  [ -d "$feed_dir" ] || return 0
+
+  if [ ! -d "$feed_dir/$release" ]; then
+    echo "[MTK] Feed release '$release' not found, skipping feed payload"
+    return 0
+  fi
+
+  if [ -d "$feed_dir/$release/files" ]; then
+    cp -rf "$feed_dir/$release/files/." ./
+    echo "[MTK] Applied feed files for $release"
+  fi
+
+  copy_mtk_autobuild_dts_sources "$feed_dir" "$release"
+
+  if [ -d "$feed_dir/$release/tools" ]; then
+    cp -rf "$feed_dir/$release/tools/." ./tools/
+    echo "[MTK] Applied feed tools for $release"
+  fi
+
+  if [ -d "$feed_dir/$release/patches-base" ]; then
+    find "$feed_dir/$release/patches-base" -name '*.patch' -print | sort | while read -r patch_file; do
+      apply_mtk_patch "$patch_file"
+    done
+    echo "[MTK] Applied base patches for $release"
+  fi
+
+  prune_mtk_minimal_reference_devices
+
+  if [ -d "$feed_dir/$release/patches-feeds" ]; then
+    find "$feed_dir/$release/patches-feeds" -name '*.patch' -print | sort | while read -r patch_file; do
+      apply_mtk_patch "$patch_file"
+    done
+    echo "[MTK] Applied feed patches for $release"
+  fi
 }
 
 rewrite_feeds \
@@ -128,7 +278,11 @@ rewrite_feeds \
   "https://github.com/openwrt/routing.git;openwrt-24.10" \
   "https://github.com/openwrt/telephony.git;openwrt-24.10"
 
-disable_mtk_feed
+if [ "${BPI_R4_ENABLE_MTK_FEED:-0}" = "1" ]; then
+  enable_mtk_feed
+else
+  disable_mtk_feed
+fi
 
 if ! ./scripts/feeds update -a; then
   rewrite_feeds \
@@ -136,7 +290,11 @@ if ! ./scripts/feeds update -a; then
     "https://git.openwrt.org/project/luci.git;openwrt-24.10" \
     "https://git.openwrt.org/feed/routing.git;openwrt-24.10" \
     "https://git.openwrt.org/feed/telephony.git;openwrt-24.10"
-  disable_mtk_feed
+  if [ "${BPI_R4_ENABLE_MTK_FEED:-0}" = "1" ]; then
+    enable_mtk_feed
+  else
+    disable_mtk_feed
+  fi
   ./scripts/feeds update -a
 fi
 
@@ -154,6 +312,10 @@ fix_tfa_ldflags_compat
 
 if ! ./scripts/feeds install -a; then
   echo "[PREP] WARNING: Some feeds failed to install (non-fatal)" >&2
+fi
+
+if [ "${BPI_R4_ENABLE_MTK_FEED:-0}" = "1" ]; then
+  apply_mtk_feed_payload
 fi
 
 # ===========================================================================
@@ -209,6 +371,10 @@ if [ -d "../bl-mt798x-dhcpd" ]; then
     sed_in_place 's/+&pinctrl {/+\&pio {/' "$uboot_patch"
     sed_in_place 's/<&gpio /<\&pio /g' "$uboot_patch"
     echo "[BOOT] Fixed uboot DTS patch labels for u-boot mt7988.dtsi compatibility"
+  fi
+
+  if [ -d "../bl-mt798x-dhcpd/uboot-mtk-20250711" ] && [ -f "$uboot_patch" ]; then
+    patch_custom_uboot_bpi_r4_compat "../bl-mt798x-dhcpd/uboot-mtk-20250711" "$uboot_patch" || true
   fi
 else
   echo "[BOOT] Custom bootloader not found, using default OpenWrt sources"
