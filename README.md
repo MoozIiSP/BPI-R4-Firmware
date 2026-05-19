@@ -35,6 +35,8 @@ make clean       # Remove cloned source trees
 ├── tools/                    # Validation & analysis tools
 ├── tests/                    # Test suite
 ├── docs/                     # Documentation
+│   ├── mtk-feed-custom-bootloader-build.md
+│   │                           # MTK feed + custom bootloader build notes
 │   └── templates/            # Report & checklist templates
 ├── Makefile                  # Build entry point
 └── .github/workflows/        # CI/CD pipelines
