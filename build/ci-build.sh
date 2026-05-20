@@ -89,7 +89,40 @@ configure_boot_media() {
       ;;
   esac
 
-  make defconfig
+  run_defconfig
+}
+
+dump_config_package_context() {
+  local config_file="$REPO_ROOT/openwrt/tmp/.config-package.in"
+  [ -f "$config_file" ] || return 0
+
+  echo "[CI] Context around generated package config syntax errors:"
+  awk '
+    /syntax error|invalid statement/ {
+      if (match($0, /:([0-9]+):/, m)) {
+        lines[m[1]]=1
+      }
+    }
+    END {
+      for (line in lines) {
+        start=line-8
+        if (start < 1) start=1
+        end=line+8
+        printf "%s %s\n", start, end
+      }
+    }
+  ' "$REPO_ROOT/openwrt/defconfig.err" 2>/dev/null | while read -r start end; do
+    nl -ba "$config_file" | sed -n "${start},${end}p"
+  done
+}
+
+run_defconfig() {
+  cd "$REPO_ROOT/openwrt"
+  if ! make defconfig 2>defconfig.err; then
+    cat defconfig.err >&2
+    dump_config_package_context >&2
+    return 1
+  fi
 }
 
 bundle_artifacts() {
@@ -189,7 +222,7 @@ bash ../build/03_target.sh --variant "$BUILD_VARIANT"
 
 echo "[CI] Step 4: seed configuration"
 cp "$REPO_ROOT/seed/${BUILD_VARIANT}.seed" .config
-make defconfig
+run_defconfig
 
 echo "[CI] Step 5: boot media configuration"
 configure_boot_media "$BUILD_MEDIA"
