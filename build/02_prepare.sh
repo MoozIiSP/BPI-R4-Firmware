@@ -461,9 +461,9 @@ if [ "$VARIANT" = "full" ]; then
   cp -rf ../patches/kernel/bbr3/* ./target/linux/generic/backport-6.6/ 2>/dev/null || true
   cp -rf ../patches/kernel/perf-cc/* ./target/linux/generic/hack-6.6/ 2>/dev/null || true
   cp -rf ../patches/kernel/arm/* ./target/linux/generic/hack-6.6/ 2>/dev/null || true
-  cp -rf ../patches/kernel/lrng/* ./target/linux/generic/hack-6.6/ 2>/dev/null || true
-
-  cat >> ./target/linux/generic/config-6.6 <<'LRNG'
+  if [ "${BPI_R4_ENABLE_LRNG:-0}" = "1" ]; then
+    cp -rf ../patches/kernel/lrng/* ./target/linux/generic/hack-6.6/ 2>/dev/null || true
+    cat >> ./target/linux/generic/config-6.6 <<'LRNG'
 
 # CONFIG_RANDOM_DEFAULT_IMPL is not set
 CONFIG_LRNG=y
@@ -474,7 +474,11 @@ CONFIG_LRNG_CPU=y
 # CONFIG_LRNG_SCHED is not set
 CONFIG_LRNG_SELFTEST=y
 # CONFIG_LRNG_SELFTEST_PANIC is not set
+# CONFIG_LRNG_AIS2031_NTG1_SEEDING_STRATEGY is not set
 LRNG
+  else
+    echo "[PREP] Skipping LRNG kernel patch (not part of validated builder profile)"
+  fi
 
   cp -rf ../patches/kernel/wg/* ./target/linux/generic/hack-6.6/ 2>/dev/null || true
   cp -rf ../patches/kernel/btf/* ./target/linux/generic/hack-6.6/ 2>/dev/null || true
