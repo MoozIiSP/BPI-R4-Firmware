@@ -40,10 +40,15 @@ clone_repo() {
 # --- Resolve OpenWrt 24.10 release tag ---------------------------------------
 resolve_openwrt_tag() {
   local tag
-  tag="$(curl -fsSL https://api.github.com/repos/openwrt/openwrt/tags \
-    | jq -r '.[].name' \
-    | grep -E '^v24\.10' \
-    | head -n 1)"
+  if [ -n "${OPENWRT_TAG:-}" ]; then
+    echo "$OPENWRT_TAG"
+    return 0
+  fi
+
+  tag="$(git ls-remote --tags --refs https://github.com/openwrt/openwrt.git 'refs/tags/v24.10*' \
+    | awk -F/ '{print $NF}' \
+    | sort -V \
+    | tail -n 1)"
   if [ -z "$tag" ]; then
     echo "[CLONE] ERROR: Could not resolve OpenWrt v24.10 tag" >&2
     exit 1
