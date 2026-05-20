@@ -1,0 +1,78 @@
+name: Build Firmware
+run-name: Build Firmware · ${{ inputs.variant || 'minimal' }} · ${{ inputs.media || 'sd' }} · ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: "Build variant"
+        required: true
+        type: choice
+        default: "minimal"
+        options:
+          - minimal
+          - full
+      media:
+        description: "Boot medium"
+        required: true
+        type: choice
+        default: "sd"
+        options:
+          - sd
+          - emmc
+          - snand
+      enable_mtk_feed:
+        description: "Apply MediaTek feed payload"
+        required: true
+        type: boolean
+        default: true
+      mtk_feed_release:
+        description: "MediaTek feed release directory"
+        required: true
+        type: string
+        default: "24.10"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}-${{ inputs.variant || 'minimal' }}-${{ inputs.media || 'sd' }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    env:
+      BUILD_VARIANT: ${{ inputs.variant || 'minimal' }}
+      BUILD_MEDIA: ${{ inputs.media || 'sd' }}
+      BPI_R4_ENABLE_MTK_FEED: ${{ inputs.enable_mtk_feed && '1' || '0' }}
+      BPI_R4_MTK_FEED_RELEASE: ${{ inputs.mtk_feed_release || '24.10' }}
+      ARTIFACT_DIR: artifacts
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache OpenWrt downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            openwrt/dl
+          key: ${{ runner.os }}-openwrt-dl-${{ hashFiles('build/*.sh', 'seed/*.seed') }}
+          restore-keys: |
+            ${{ runner.os }}-openwrt-dl-
+
+      - name: Install dependencies
+        run: bash build/ci-install-deps.sh
+
+      - name: Build firmware
+        run: bash build/ci-build.sh
+
+      - name: Upload firmware bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: bpi-r4-${{ env.BUILD_VARIANT }}-${{ env.BUILD_MEDIA }}
+          path: |
+            artifacts/*.zip
+            artifacts/*.sha256sum
+          retention-days: 14

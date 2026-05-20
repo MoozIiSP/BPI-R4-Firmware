@@ -23,7 +23,9 @@ make defconfig
 make -j"$(nproc)"
 ```
 
-Or trigger the GitHub Actions matrix build and download the media-specific bundle you need.
+Or trigger the `Build Firmware` GitHub Actions workflow and download the
+media-specific bundle you need. See `docs/ci-release-flow.md` for the current
+workflow layout.
 
 ---
 

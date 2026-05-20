@@ -35,6 +35,7 @@ make clean       # Remove cloned source trees
 ├── tools/                    # Validation & analysis tools
 ├── tests/                    # Test suite
 ├── docs/                     # Documentation
+│   ├── ci-release-flow.md    # GitHub Actions build/release flow
 │   ├── mtk-feed-custom-bootloader-build.md
 │   │                           # MTK feed + custom bootloader build notes
 │   └── templates/            # Report & checklist templates
@@ -66,8 +67,11 @@ make clean       # Remove cloned source trees
 
 | Workflow | Trigger | Runner |
 |----------|---------|--------|
-| **Validate** | push/PR | ubuntu-latest |
-| **Build — Minimal** | manual | self-hosted (Podman) |
+| **Validate** | push/PR/manual | ubuntu-latest |
+| **Build Firmware** | manual | ubuntu-24.04 |
+| **Release Firmware** | tag `v*`/manual | ubuntu-24.04 |
+
+See `docs/ci-release-flow.md` for the normalized build and release flow.
 
 ## License
 

@@ -19,6 +19,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  workflow-yaml:
+    runs-on: ubuntu-latest
+    name: Workflow YAML parse check
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse workflow files
+        run: |
+          ruby -e 'require "yaml"; Dir[".github/workflows/*.yml"].sort.each { |f| YAML.load_file(f); puts "OK: #{f}" }'
+
   script-syntax:
     runs-on: ubuntu-latest
     name: Bash syntax check
