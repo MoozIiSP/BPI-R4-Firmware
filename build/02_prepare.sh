@@ -140,6 +140,14 @@ patch_custom_uboot_bpi_r4_compat() {
   echo "[BOOT] Patched custom U-Boot BPI-R4 DTS and BOARD_LATE_INIT compatibility"
 }
 
+patch_full_sing_box_metadata() {
+  local makefile="./package/new/imm_pkg/sing-box/Makefile"
+  [ -f "$makefile" ] || return 0
+
+  sed_in_place 's#include ../../lang/golang/golang-package.mk#include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk#' "$makefile"
+  echo "[PREP] Patched sing-box golang include path"
+}
+
 # ===========================================================================
 # SECTION 1: Feeds
 # ===========================================================================
@@ -493,6 +501,7 @@ LRNG
 
   echo "[PREP] === Section 9: Third-party packages ==="
   cp -rf ../OpenWrt-Add ./package/new 2>/dev/null || true
+  patch_full_sing_box_metadata
   rm -rf feeds/packages/net/{xray-core,v2ray-core,v2ray-geodata,sing-box,frp,microsocks,shadowsocks-libev,zerotier,daed} 2>/dev/null || true
   rm -rf feeds/luci/applications/{luci-app-frps,luci-app-frpc,luci-app-zerotier,luci-app-filemanager} 2>/dev/null || true
   rm -rf feeds/packages/utils/coremark 2>/dev/null || true
