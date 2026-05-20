@@ -316,6 +316,11 @@ ensure_file_has_line \
   "# CONFIG_USB_XHCI_MTK_DEBUGFS is not set" \
   "[KERNEL]"
 
+ensure_file_has_line \
+  "./target/linux/generic/config-6.6" \
+  "# CONFIG_IXGBE_IPSEC is not set" \
+  "[KERNEL]"
+
 fix_tfa_ldflags_compat
 
 if ! ./scripts/feeds install -a; then
