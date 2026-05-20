@@ -70,6 +70,7 @@ make clean       # Remove cloned source trees
 | **Validate** | push/PR/manual | ubuntu-latest |
 | **Build Firmware** | manual | ubuntu-24.04 |
 | **Release Firmware** | tag `v*`/manual | ubuntu-24.04 |
+| **Release Packages** | tag `packages-v*`/manual | ubuntu-24.04 |
 
 See `docs/ci-release-flow.md` for the normalized build and release flow.
 

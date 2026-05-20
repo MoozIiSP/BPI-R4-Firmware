@@ -7,6 +7,7 @@ This repository keeps GitHub Actions intentionally small and explicit:
    boot medium.
 3. `Release Firmware` builds release bundles and publishes them to GitHub
    Releases.
+4. `Release Packages` builds and publishes the full package repository.
 
 Temporary patch-test workflows should not be kept after the validated change is
 merged. Add build behavior to `build/ci-build.sh` first, then call it from a
@@ -84,6 +85,40 @@ Release and uploads the generated bundles.
 
 Manual releases default to draft mode. Tag-triggered releases are published
 directly.
+
+## Package release
+
+Workflow: `.github/workflows/release-packages.yml`
+
+Triggers:
+
+- push a tag matching `packages-v*`
+- manual dispatch with `tag_name`
+
+The package release workflow builds the full profile with:
+
+- SD media selection
+- MTK feed enabled
+- custom bootloader enabled through the standard prepare step
+
+It does not publish firmware images. Instead, it bundles the generated package
+repository:
+
+```text
+bin/packages
+bin/targets/mediatek/filogic/packages
+```
+
+The package bundle is published as:
+
+```text
+bpi-r4-full-packages.zip
+bpi-r4-full-packages.zip.sha256sum
+```
+
+The bundle keeps generated indexes and all produced `.apk` package files. If
+the selected OpenWrt branch still emits `.ipk` packages, those are preserved in
+the same archive as well.
 
 ## Release safety
 

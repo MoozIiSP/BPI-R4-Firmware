@@ -9,6 +9,8 @@ set -euo pipefail
 #   BPI_R4_ENABLE_MTK_FEED    0|1 (default: 1)
 #   BPI_R4_MTK_FEED_RELEASE   MTK feed release directory (default: 24.10)
 #   ARTIFACT_DIR              output directory for bundled artifacts
+#   BUNDLE_FIRMWARE           0|1 (default: 1)
+#   BUNDLE_PACKAGE_REPOSITORY 0|1 (default: 0)
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
@@ -18,6 +20,8 @@ BUILD_MEDIA="${BUILD_MEDIA:-sd}"
 BPI_R4_ENABLE_MTK_FEED="${BPI_R4_ENABLE_MTK_FEED:-1}"
 BPI_R4_MTK_FEED_RELEASE="${BPI_R4_MTK_FEED_RELEASE:-24.10}"
 ARTIFACT_DIR="${ARTIFACT_DIR:-artifacts}"
+BUNDLE_FIRMWARE="${BUNDLE_FIRMWARE:-1}"
+BUNDLE_PACKAGE_REPOSITORY="${BUNDLE_PACKAGE_REPOSITORY:-0}"
 
 case "$BUILD_VARIANT" in
   minimal|full) ;;
@@ -111,11 +115,65 @@ bundle_artifacts() {
   echo "[CI] Bundle created: $archive"
 }
 
+bundle_package_repository() {
+  local package_root="$REPO_ROOT/openwrt/bin/packages"
+  local target_packages="$REPO_ROOT/openwrt/bin/targets/mediatek/filogic/packages"
+  local bundle_name="bpi-r4-${BUILD_VARIANT}-packages"
+  local bundle_dir="$REPO_ROOT/$ARTIFACT_DIR/$bundle_name"
+  local archive="$REPO_ROOT/$ARTIFACT_DIR/${bundle_name}.zip"
+  local package_count
+
+  package_count="$(
+    find "$package_root" "$target_packages" \
+      -type f \( -name '*.apk' -o -name '*.ipk' \) 2>/dev/null | wc -l
+  )"
+
+  if [ "$package_count" -eq 0 ]; then
+    echo "[CI] ERROR: No .apk or .ipk packages were generated" >&2
+    exit 1
+  fi
+
+  rm -rf "$bundle_dir" "$archive" "$archive.sha256sum"
+  mkdir -p "$bundle_dir"
+
+  if [ -d "$package_root" ]; then
+    mkdir -p "$bundle_dir/bin"
+    cp -a "$package_root" "$bundle_dir/bin/"
+  fi
+
+  if [ -d "$target_packages" ]; then
+    mkdir -p "$bundle_dir/bin/targets/mediatek/filogic"
+    cp -a "$target_packages" "$bundle_dir/bin/targets/mediatek/filogic/"
+  fi
+
+  cp "$REPO_ROOT/openwrt/.config" "$bundle_dir/config.build-config"
+  cat > "$bundle_dir/README.txt" <<EOF
+BPI-R4 full package repository
+
+Variant: $BUILD_VARIANT
+Media used for bootloader selection: $BUILD_MEDIA
+MTK feed enabled: $BPI_R4_ENABLE_MTK_FEED
+MTK feed release: $BPI_R4_MTK_FEED_RELEASE
+Package files: $package_count
+
+Package repository roots:
+- bin/packages
+- bin/targets/mediatek/filogic/packages
+EOF
+
+  (cd "$REPO_ROOT/$ARTIFACT_DIR" && zip -qr "$(basename "$archive")" "$bundle_name")
+  (cd "$REPO_ROOT/$ARTIFACT_DIR" && sha256sum "$(basename "$archive")" > "$(basename "$archive").sha256sum")
+
+  echo "[CI] Package repository bundle created: $archive"
+}
+
 echo "[CI] Variant: $BUILD_VARIANT"
 echo "[CI] Media: $BUILD_MEDIA"
 echo "[CI] MTK feed: $BPI_R4_ENABLE_MTK_FEED"
 echo "[CI] MTK release: $BPI_R4_MTK_FEED_RELEASE"
 echo "[CI] GPT layout: ${BPI_R4_GPT_LAYOUT:-none}"
+echo "[CI] Bundle firmware: $BUNDLE_FIRMWARE"
+echo "[CI] Bundle package repository: $BUNDLE_PACKAGE_REPOSITORY"
 
 chmod +x build/*.sh
 
@@ -151,5 +209,16 @@ if [ "$build_status" -ne 0 ]; then
   exit "$build_status"
 fi
 
-echo "[CI] Step 8: bundle artifacts"
-bundle_artifacts
+if [ "$BUNDLE_FIRMWARE" = "1" ]; then
+  echo "[CI] Step 8: bundle firmware artifacts"
+  bundle_artifacts
+fi
+
+if [ "$BUNDLE_PACKAGE_REPOSITORY" = "1" ]; then
+  echo "[CI] Step 9: refresh package indexes"
+  cd "$REPO_ROOT/openwrt"
+  make package/index
+
+  echo "[CI] Step 10: bundle package repository"
+  bundle_package_repository
+fi
