@@ -23,6 +23,14 @@ ARTIFACT_DIR="${ARTIFACT_DIR:-artifacts}"
 BUNDLE_FIRMWARE="${BUNDLE_FIRMWARE:-1}"
 BUNDLE_PACKAGE_REPOSITORY="${BUNDLE_PACKAGE_REPOSITORY:-0}"
 
+# GitHub Actions passes BUILD_VARIANT through the environment, but OpenWrt's
+# package build system also uses BUILD_VARIANT internally for package variants.
+# Keep the CI profile as a local shell variable so packages such as U-Boot do
+# not see "full" or "minimal" as their own variant name.
+ci_build_variant="$BUILD_VARIANT"
+unset BUILD_VARIANT
+BUILD_VARIANT="$ci_build_variant"
+
 case "$BUILD_VARIANT" in
   minimal|full) ;;
   *) echo "[CI] ERROR: BUILD_VARIANT must be minimal or full" >&2; exit 1 ;;
