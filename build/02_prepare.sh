@@ -197,17 +197,49 @@ handle_mtk_patch_failure() {
   fi
 
   local dnsmasq_makefile="./package/network/services/dnsmasq/Makefile"
-  if [ "$patch_name" = "3200-package-dnsmasq-v2_91-upgrade.patch" ] &&
-     [ -f "$dnsmasq_makefile" ] &&
-     grep -Fq "PKG_UPSTREAM_VERSION:=2.90" "$dnsmasq_makefile"; then
-    perl -pi -e '
-      s/^PKG_UPSTREAM_VERSION:=.*/PKG_UPSTREAM_VERSION:=2.91/;
-      s/^PKG_RELEASE:=.*/PKG_RELEASE:=1/;
-      s/^PKG_HASH:=.*/PKG_HASH:=f622682848b33677adb2b6ad08264618a2ae0a01da486a93fd8cd91186b3d153/;
-    ' "$dnsmasq_makefile"
-    rm -f "$dnsmasq_makefile.rej"
-    echo "[MTK] Applied dnsmasq 2.91 metadata update despite release-context drift"
-    return 0
+  if [[ "$patch_name" =~ ^3200-package-dnsmasq-v2_(91|92)-upgrade\.patch$ ]] &&
+     [ -f "$dnsmasq_makefile" ]; then
+    local dnsmasq_metadata_updated=0
+    local dnsmasq_known_rejects=0
+    local dnsmasq_patch_dir="./package/network/services/dnsmasq/patches"
+
+    if grep -Fq "PKG_UPSTREAM_VERSION:=2.90" "$dnsmasq_makefile"; then
+      case "$patch_name" in
+        3200-package-dnsmasq-v2_91-upgrade.patch)
+          perl -pi -e '
+            s/^PKG_UPSTREAM_VERSION:=.*/PKG_UPSTREAM_VERSION:=2.91/;
+            s/^PKG_RELEASE:=.*/PKG_RELEASE:=1/;
+            s/^PKG_HASH:=.*/PKG_HASH:=f622682848b33677adb2b6ad08264618a2ae0a01da486a93fd8cd91186b3d153/;
+          ' "$dnsmasq_makefile"
+          ;;
+        3200-package-dnsmasq-v2_92-upgrade.patch)
+          perl -pi -e '
+            s/^PKG_UPSTREAM_VERSION:=.*/PKG_UPSTREAM_VERSION:=2.92/;
+            s/^PKG_RELEASE:=.*/PKG_RELEASE:=2/;
+            s/^PKG_HASH:=.*/PKG_HASH:=4bf50c2c1018f9fbc26037df51b90ecea0cb73d46162846763b92df0d6c3a458/;
+          ' "$dnsmasq_makefile"
+          ;;
+      esac
+      rm -f "$dnsmasq_makefile.rej"
+      dnsmasq_metadata_updated=1
+    fi
+
+    for cve_patch in 005-CVE-2026-4893.patch 006-CVE-2026-5172.patch; do
+      if [ -f "$dnsmasq_patch_dir/$cve_patch" ] &&
+         [ -f "$dnsmasq_patch_dir/$cve_patch.rej" ]; then
+        rm -f "$dnsmasq_patch_dir/$cve_patch.rej"
+        dnsmasq_known_rejects=1
+      fi
+    done
+
+    if [ "$dnsmasq_metadata_updated" -eq 1 ] ||
+       [ "$dnsmasq_known_rejects" -eq 1 ]; then
+      if find ./package/network/services/dnsmasq -name '*.rej' -print -quit | grep -q .; then
+        return 1
+      fi
+      echo "[MTK] Accepted dnsmasq upgrade patch with known OpenWrt 24.10 context drift"
+      return 0
+    fi
   fi
 
   return 1
