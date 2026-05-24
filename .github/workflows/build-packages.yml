@@ -1,0 +1,58 @@
+name: Build Packages
+run-name: Build Packages · ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      mtk_feed_release:
+        description: "MediaTek feed release directory"
+        required: true
+        type: string
+        default: "24.10"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-packages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-packages:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    env:
+      BUILD_VARIANT: full
+      BUILD_MEDIA: sd
+      BPI_R4_ENABLE_MTK_FEED: "1"
+      BPI_R4_MTK_FEED_RELEASE: ${{ inputs.mtk_feed_release || '24.10' }}
+      BUNDLE_FIRMWARE: "0"
+      BUNDLE_PACKAGE_REPOSITORY: "1"
+      ARTIFACT_DIR: artifacts
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache OpenWrt downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            openwrt/dl
+          key: ${{ runner.os }}-openwrt-dl-${{ hashFiles('build/*.sh', 'seed/*.seed') }}
+          restore-keys: |
+            ${{ runner.os }}-openwrt-dl-
+
+      - name: Install dependencies
+        run: bash build/ci-install-deps.sh
+
+      - name: Build package repository
+        run: bash build/ci-build.sh
+
+      - name: Upload package repository artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bpi-r4-full-packages
+          path: |
+            artifacts/bpi-r4-full-packages.zip
+            artifacts/bpi-r4-full-packages.zip.sha256sum
+          retention-days: 14

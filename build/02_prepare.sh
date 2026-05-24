@@ -530,7 +530,11 @@ LRNG
   mkdir -p package/network/utils/nftables/patches
   cp -f ../patches/packages/firewall/nftables/*.patch ./package/network/utils/nftables/patches/ 2>/dev/null || true
   mkdir -p package/network/config/firewall4/patches
-  cp -f ../patches/packages/firewall/firewall4_patches/*.patch ./package/network/config/firewall4/patches/ 2>/dev/null || true
+  find ../patches/packages/firewall/firewall4_patches -maxdepth 1 -type f -name '*.patch' \
+    ! -name '999-01-firewall4-add-fullcone-support.patch' \
+    ! -name '999-02-firewall4-add-bcm-fullconenat-support.patch' \
+    -exec cp -f {} ./package/network/config/firewall4/patches/ \; 2>/dev/null || true
+  echo "[PREP] Skipping local firewall4 fullcone patches until the base build is stable"
   (
     cd feeds/luci
     for p in \

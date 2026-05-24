@@ -1,5 +1,5 @@
-name: Build Firmware
-run-name: Build Firmware · ${{ inputs.variant || 'minimal' }} · ${{ inputs.media || 'sd' }} · ${{ github.ref_name }}
+name: Build Firmware Image
+run-name: Build Firmware Image · ${{ inputs.variant || 'minimal' }} · ${{ inputs.media || 'sd' }} · ${{ github.ref_name }}
 
 on:
   workflow_dispatch:
@@ -36,7 +36,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: build-${{ github.ref }}-${{ inputs.variant || 'minimal' }}-${{ inputs.media || 'sd' }}
+  group: build-image-${{ github.ref }}-${{ inputs.variant || 'minimal' }}-${{ inputs.media || 'sd' }}
   cancel-in-progress: false
 
 jobs:
@@ -48,6 +48,8 @@ jobs:
       BUILD_MEDIA: ${{ inputs.media || 'sd' }}
       BPI_R4_ENABLE_MTK_FEED: ${{ inputs.enable_mtk_feed && '1' || '0' }}
       BPI_R4_MTK_FEED_RELEASE: ${{ inputs.mtk_feed_release || '24.10' }}
+      BUNDLE_FIRMWARE: "1"
+      BUNDLE_PACKAGE_REPOSITORY: "0"
       ARTIFACT_DIR: artifacts
     steps:
       - name: Checkout
@@ -73,6 +75,6 @@ jobs:
         with:
           name: bpi-r4-${{ env.BUILD_VARIANT }}-${{ env.BUILD_MEDIA }}
           path: |
-            artifacts/*.zip
-            artifacts/*.sha256sum
+            artifacts/bpi-r4-${{ env.BUILD_VARIANT }}-${{ env.BUILD_MEDIA }}.zip
+            artifacts/bpi-r4-${{ env.BUILD_VARIANT }}-${{ env.BUILD_MEDIA }}.zip.sha256sum
           retention-days: 14
