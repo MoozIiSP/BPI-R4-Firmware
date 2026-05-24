@@ -265,12 +265,11 @@ copy_mtk_autobuild_dts_sources() {
   echo "[MTK] Added missing unified filogic DTS sources for $release"
 }
 
-prune_mtk_minimal_reference_devices() {
-  [ "$VARIANT" = "minimal" ] || return 0
+prune_mtk_reference_devices() {
   local filogic_mk="./target/linux/mediatek/image/filogic.mk"
   [ -f "$filogic_mk" ] || return 0
   sed_in_place '/^TARGET_DEVICES += mediatek_mt7988a-rfb-mxl86252$/d' "$filogic_mk"
-  echo "[MTK] Pruned non-BPI-R4 MT7988A RFB mxl86252 image target for minimal variant"
+  echo "[MTK] Pruned non-BPI-R4 MT7988A RFB mxl86252 image target"
 }
 
 apply_mtk_feed_payload() {
@@ -302,7 +301,7 @@ apply_mtk_feed_payload() {
     echo "[MTK] Applied base patches for $release"
   fi
 
-  prune_mtk_minimal_reference_devices
+  prune_mtk_reference_devices
 
   if [ -d "$feed_dir/$release/patches-feeds" ]; then
     find "$feed_dir/$release/patches-feeds" -name '*.patch' -print | sort | while read -r patch_file; do
