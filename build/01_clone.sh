@@ -119,9 +119,26 @@ if [ "$VARIANT" = "minimal" ]; then
 
 else
   # Full: clone everything
+  if [ ! -d "openwrt/.git" ]; then
+    for dir in dl staging_dir build_dir; do
+      if [ -d "openwrt/$dir" ]; then
+        echo "[CLONE] Backing up openwrt/$dir → _saved_$dir"
+        mv "openwrt/$dir" "./_saved_$dir"
+      fi
+    done
+    rm -rf openwrt
+  fi
+
   clone_repo "$OPENWRT_REPO" "$OPENWRT_TAG" openwrt
   clone_repo "$OPENWRT_REPO" "openwrt-24.10" openwrt_snap
   clone_repo "$BOOTLOADER_REPO" "master" bl-mt798x-dhcpd
+
+  for dir in dl staging_dir build_dir; do
+    if [ -d "./_saved_$dir" ]; then
+      echo "[CLONE] Restoring _saved_$dir → openwrt/$dir"
+      mv "./_saved_$dir" "openwrt/$dir"
+    fi
+  done
 
   # Third-party repos
   clone_repo "$LEDE_REPO" "master" lede &
