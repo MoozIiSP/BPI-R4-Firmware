@@ -490,9 +490,6 @@ if [ "$VARIANT" = "full" ]; then
   cp -rf ../patches/kernel/tcp/* ./target/linux/generic/backport-6.6/ 2>/dev/null || true
   cp -rf ../patches/kernel/bbr3/* ./target/linux/generic/backport-6.6/ 2>/dev/null || true
   cp -rf ../patches/kernel/perf-cc/* ./target/linux/generic/hack-6.6/ 2>/dev/null || true
-  cp -rf ../patches/kernel/arm/* ./target/linux/generic/hack-6.6/ 2>/dev/null || true
-  cp -rf ../patches/kernel/wg/* ./target/linux/generic/hack-6.6/ 2>/dev/null || true
-  cp -rf ../patches/kernel/btf/* ./target/linux/generic/hack-6.6/ 2>/dev/null || true
   cp -rf ../patches/kernel/sfe/* ./target/linux/generic/hack-6.6/ 2>/dev/null || true
   wget -q https://github.com/torvalds/linux/commit/95d0d094.patch -O target/linux/generic/pending-6.6/999-1-95d0d09.patch 2>/dev/null || true
   wget -q https://github.com/torvalds/linux/commit/1a3e9b7a.patch -O target/linux/generic/pending-6.6/999-2-1a3e9b7.patch 2>/dev/null || true
@@ -517,7 +514,6 @@ if [ "$VARIANT" = "full" ]; then
       ../../../patches/packages/firewall/luci/0002-luci-app-firewall-add-shortcut-fe-option.patch \
       ../../../patches/packages/firewall/luci/0003-luci-app-firewall-add-ipv6-nat-option.patch \
       ../../../patches/packages/firewall/luci/0004-luci-add-firewall-add-custom-nft-rule-support.patch \
-      ../../../patches/packages/firewall/luci/0005-luci-app-firewall-add-natflow-offload-support.patch \
       ../../../patches/packages/firewall/luci/0007-luci-app-firewall-add-fullcone6-option-for-nftables-.patch; do
       [ -f "$p" ] && patch -p1 < "$p" || true
     done
@@ -548,7 +544,6 @@ if [ "$VARIANT" = "full" ]; then
   sed_in_place '/auto_start/d' feeds/luci/applications/luci-app-dockerman/root/etc/uci-defaults/luci-app-dockerman 2>/dev/null || true
   rm -rf ./feeds/luci/collections/luci-lib-docker 2>/dev/null || true
   cp -rf ../docker_lib/collections/luci-lib-docker ./feeds/luci/collections/luci-lib-docker 2>/dev/null || true
-  patch -p1 < ../patches/packages/odhcp6c/1002-odhcp6c-support-dhcpv6-hotplug.patch 2>/dev/null || true
   rm -rf ./package/network/services/odhcpd; cp -rf ../openwrt_ma/package/network/services/odhcpd ./package/network/services/odhcpd 2>/dev/null || true
   rm -rf ./package/network/ipv6/odhcp6c; cp -rf ../openwrt_ma/package/network/ipv6/odhcp6c ./package/network/ipv6/odhcp6c 2>/dev/null || true
 

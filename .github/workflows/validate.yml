@@ -115,14 +115,10 @@ jobs:
             patches/kernel/tcp
             patches/kernel/perf-cc
             patches/kernel/bbr3
-            patches/kernel/arm
-            patches/kernel/wg
-            patches/kernel/btf
             patches/kernel/sfe
             patches/kernel/mtk-wifi
             patches/packages/firewall
             patches/packages/miniupnpd
-            patches/packages/odhcp6c
             patches/packages/cgroupfs-mount
             patches/files
             patches/gpt
