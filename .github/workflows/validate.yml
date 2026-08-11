@@ -113,7 +113,6 @@ jobs:
         run: |
           expected_dirs=(
             patches/kernel/tcp
-            patches/kernel/fq
             patches/kernel/perf-cc
             patches/kernel/bbr3
             patches/kernel/arm
