@@ -116,7 +116,6 @@ jobs:
             patches/kernel/fq
             patches/kernel/perf-cc
             patches/kernel/bbr3
-            patches/kernel/lrng
             patches/kernel/arm
             patches/kernel/wg
             patches/kernel/btf
