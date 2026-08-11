@@ -495,7 +495,6 @@ if [ "$VARIANT" = "full" ]; then
   cp -rf ../patches/kernel/wg/* ./target/linux/generic/hack-6.6/ 2>/dev/null || true
   cp -rf ../patches/kernel/btf/* ./target/linux/generic/hack-6.6/ 2>/dev/null || true
   cp -rf ../patches/kernel/sfe/* ./target/linux/generic/hack-6.6/ 2>/dev/null || true
-  cp -rf ../patches/kernel/bcmfullcone/* ./target/linux/generic/hack-6.6/ 2>/dev/null || true
   wget -q https://github.com/torvalds/linux/commit/95d0d094.patch -O target/linux/generic/pending-6.6/999-1-95d0d09.patch 2>/dev/null || true
   wget -q https://github.com/torvalds/linux/commit/1a3e9b7a.patch -O target/linux/generic/pending-6.6/999-2-1a3e9b7.patch 2>/dev/null || true
   wget -q https://github.com/torvalds/linux/commit/7eebd219.patch -O target/linux/generic/pending-6.6/999-3-7eebd21.patch 2>/dev/null || true
@@ -511,13 +510,11 @@ if [ "$VARIANT" = "full" ]; then
   cp -f ../patches/packages/firewall/nftables/*.patch ./package/network/utils/nftables/patches/ 2>/dev/null || true
   mkdir -p package/network/config/firewall4/patches
   find ../patches/packages/firewall/firewall4_patches -maxdepth 1 -type f -name '*.patch' \
-    ! -name '999-02-firewall4-add-bcm-fullconenat-support.patch' \
     -exec cp -f {} ./package/network/config/firewall4/patches/ \; 2>/dev/null || true
-  echo "[PREP] Skipping BCM firewall4 fullcone patch pending necessity audit"
   (
     cd feeds/luci
     for p in \
-      ../../../patches/packages/firewall/luci/0001-luci-app-firewall-add-nft-fullcone-and-bcm-fullcone-.patch \
+      ../../../patches/packages/firewall/luci/0001-luci-app-firewall-add-nft-fullcone-option.patch \
       ../../../patches/packages/firewall/luci/0002-luci-app-firewall-add-shortcut-fe-option.patch \
       ../../../patches/packages/firewall/luci/0003-luci-app-firewall-add-ipv6-nat-option.patch \
       ../../../patches/packages/firewall/luci/0004-luci-add-firewall-add-custom-nft-rule-support.patch \

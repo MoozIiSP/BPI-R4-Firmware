@@ -120,7 +120,6 @@ jobs:
             patches/kernel/wg
             patches/kernel/btf
             patches/kernel/sfe
-            patches/kernel/bcmfullcone
             patches/kernel/mtk-wifi
             patches/packages/firewall
             patches/packages/miniupnpd
