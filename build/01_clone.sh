@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # =============================================================================
-# 01_clone.sh — Clone OpenWrt 24.10 source and dependencies
+# 01_clone.sh — Clone OpenWrt 25.12 source and dependencies
 # =============================================================================
 # Usage: Run from repository root: bash build/01_clone.sh [--variant VARIANT]
 #
@@ -37,15 +37,15 @@ clone_repo() {
   git clone -b "$branch_name" --depth 1 "$repo_url" "$target_dir"
 }
 
-# --- Resolve OpenWrt 24.10 release tag ---------------------------------------
+# --- Resolve OpenWrt 25.12 release tag ---------------------------------------
 resolve_openwrt_tag() {
   local tag
   tag="$(curl -fsSL https://api.github.com/repos/openwrt/openwrt/tags \
     | jq -r '.[].name' \
-    | grep -E '^v24\.10' \
+    | grep -E '^v25\.12' \
     | head -n 1)"
   if [ -z "$tag" ]; then
-    echo "[CLONE] ERROR: Could not resolve OpenWrt v24.10 tag" >&2
+    echo "[CLONE] ERROR: Could not resolve OpenWrt v25.12 tag" >&2
     exit 1
   fi
   echo "$tag"
@@ -84,7 +84,7 @@ if [ "$VARIANT" = "minimal" ]; then
     # 2. Clean and clone
     rm -rf openwrt
     clone_repo "$OPENWRT_REPO" "$OPENWRT_TAG" openwrt &
-    clone_repo "$OPENWRT_REPO" "openwrt-24.10" openwrt_snap &
+    clone_repo "$OPENWRT_REPO" "openwrt-25.12" openwrt_snap &
     clone_repo "$BOOTLOADER_REPO" "master" bl-mt798x-dhcpd &
     wait
 
@@ -97,7 +97,7 @@ if [ "$VARIANT" = "minimal" ]; then
     done
   else
     echo "[CLONE] OpenWrt source already present."
-    clone_repo "$OPENWRT_REPO" "openwrt-24.10" openwrt_snap
+    clone_repo "$OPENWRT_REPO" "openwrt-25.12" openwrt_snap
     clone_repo "$BOOTLOADER_REPO" "master" bl-mt798x-dhcpd
   fi
 
@@ -116,7 +116,7 @@ if [ "$VARIANT" = "minimal" ]; then
 else
   # Full: clone everything
   clone_repo "$OPENWRT_REPO" "$OPENWRT_TAG" openwrt
-  clone_repo "$OPENWRT_REPO" "openwrt-24.10" openwrt_snap
+  clone_repo "$OPENWRT_REPO" "openwrt-25.12" openwrt_snap
   clone_repo "$BOOTLOADER_REPO" "master" bl-mt798x-dhcpd
 
   # Third-party repos

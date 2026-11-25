@@ -5,7 +5,7 @@ CONFIG_TARGET_mediatek_filogic_DEVICE_bananapi_bpi-r4=y
 CONFIG_TARGET_ARCH_PACKAGES="aarch64_cortex-a53"
 CONFIG_TARGET_KERNEL_PARTSIZE=32
 CONFIG_TARGET_ROOTFS_INITRAMFS=n
-CONFIG_TARGET_ROOTFS_PARTSIZE=4096
+CONFIG_TARGET_ROOTFS_PARTSIZE=2048
 # CONFIG_ALL_KMODS is not set
 # CONFIG_DEVEL is not set
 # CONFIG_KERNEL_USB_XHCI_MTK_DEBUGFS is not set
@@ -19,10 +19,8 @@ CONFIG_REPRODUCIBLE_DEBUG_INFO=y
 
 # GCC
 CONFIG_TOOLCHAINOPTS=y
-
 ### ZLIB
 CONFIG_ZLIB_OPTIMIZE_SPEED=y
-
 # DAE
 CONFIG_KERNEL_DEBUG_INFO=y
 CONFIG_KERNEL_DEBUG_INFO_REDUCED=n
@@ -34,21 +32,17 @@ CONFIG_BPF_TOOLCHAIN_HOST=y
 CONFIG_KERNEL_XDP_SOCKETS=y
 CONFIG_PACKAGE_kmod-xdp-sockets-diag=y
 CONFIG_PACKAGE_luci-app-dae=y
-
 # SAVING RAM FOR DAE
 CONFIG_PACKAGE_zram-swap=y
 CONFIG_PACKAGE_kmod-lib-lz4=y
 CONFIG_PACKAGE_kmod-lib-lzo=y
 CONFIG_PACKAGE_kmod-lib-zstd=y
-
 ### AGGRESSIVE ###
 CONFIG_USE_GC_SECTIONS=y
 CONFIG_USE_LTO=y
-
 # RNGD
 CONFIG_PACKAGE_urandom-seed=y
 CONFIG_PACKAGE_urngd=y
-
 ### BASIC ###
 CONFIG_PACKAGE_kmod-hwmon-pwmfan=y
 CONFIG_PACKAGE_addition-trans-zh=y
@@ -62,7 +56,6 @@ CONFIG_PACKAGE_kmod-fs-f2fs=y
 CONFIG_PACKAGE_libustream-openssl=y
 # CONFIG_PACKAGE_libustream-wolfssl is not set
 CONFIG_PACKAGE_wget-ssl=y
-
 ### DDNS ###
 CONFIG_PACKAGE_luci-app-ddns=y
 CONFIG_PACKAGE_ddns-scripts=y
@@ -71,7 +64,6 @@ CONFIG_PACKAGE_ddns-scripts-dnspod=y
 CONFIG_PACKAGE_ddns-scripts-services=y
 CONFIG_PACKAGE_ddns-scripts-aliyun=y
 CONFIG_PACKAGE_bind-host=y
-
 ### 22.03 ###
 # CONFIG_PACKAGE_firewall is not set
 CONFIG_PACKAGE_firewall4=y
@@ -95,15 +87,13 @@ CONFIG_PACKAGE_iptables-mod-tproxy=y
 # CONFIG_PACKAGE_miniupnpd-iptables is not set
 CONFIG_PACKAGE_miniupnpd-nftables=y
 CONFIG_PACKAGE_nat6=y
-
 ### LUCI ###
 CONFIG_LUCI_LANG_zh_Hans=y
 CONFIG_LUCI_LANG_en=y
 # CONFIG_LUCI_CSSTIDY is not set
 # CONFIG_LUCI_JSMIN is not set
-CONFIG_PACKAGE_luci-nginx=y
+# CONFIG_PACKAGE_luci-nginx is not set
 CONFIG_PACKAGE_luci-compat=y
-
 ### APPLICATION ###
 CONFIG_PACKAGE_luci-app-homeproxy=m
 CONFIG_PACKAGE_luci-app-ap-modem=y
@@ -155,7 +145,6 @@ CONFIG_PACKAGE_luci-app-nikki=y
 CONFIG_PACKAGE_luci-app-filemanager=y
 CONFIG_PACKAGE_luci-app-einat=y
 CONFIG_PACKAGE_luci-app-bandix=y
-
 ### SSRP ###
 #CONFIG_PACKAGE_luci-app-ssr-plus=y
 #CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_Shadowsocks_Rust_Client=y
@@ -165,28 +154,20 @@ CONFIG_PACKAGE_luci-app-bandix=y
 #CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_Kcptun=y
 #CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_ShadowsocksR_Libev_Client=y
 #CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_ShadowsocksR_Libev_Server=y
-
 ### PASSWALL ###
 CONFIG_PACKAGE_luci-app-passwall=m
-
 ### OpenClash ###
-
-
 ### THEME ###
 CONFIG_PACKAGE_luci-theme-argon=y
 CONFIG_PACKAGE_luci-theme-bootstrap=y
-
 ### RESET ###
 CONFIG_PACKAGE_kmod-gpio-button-hotplug=y
-
 ### SHARE NETWORK ###
 #CONFIG_PACKAGE_usbmuxd=y
 #CONFIG_PACKAGE_kmod-usb-net-rndis=y
 #CONFIG_PACKAGE_kmod-usb-net-ipheth=y
-
 ### BBRv3 ###
 CONFIG_PACKAGE_kmod-tcp-bbr=y
-
 ### OPENSSL ###
 CONFIG_OPENSSL_ENGINE=y
 CONFIG_OPENSSL_OPTIMIZE_SPEED=y
@@ -201,20 +182,16 @@ CONFIG_LIBCURL_OPENSSL=y
 # CONFIG_LIBCURL_WOLFSSL is not set
 # CONFIG_LIBCURL_GNUTLS is not set
 # CONFIG_LIBCURL_NOSSL is not set
-
 ### OTHERS ###
 CONFIG_PACKAGE_kmod-crypto-cmac=y
 CONFIG_PACKAGE_kmod-crypto-ccm=y
-
 ### CRYPTO ###
 CONFIG_PACKAGE_kmod-crypto-aead=y
 CONFIG_PACKAGE_kmod-crypto-arc4=y
 CONFIG_PACKAGE_kmod-crypto-authenc=y
 CONFIG_PACKAGE_kmod-crypto-blake2b=y
 CONFIG_PACKAGE_kmod-crypto-cbc=y
-CONFIG_PACKAGE_kmod-crypto-ccm=y
 CONFIG_PACKAGE_kmod-crypto-chacha20poly1305=y
-CONFIG_PACKAGE_kmod-crypto-cmac=y
 CONFIG_PACKAGE_kmod-crypto-crc32=y
 CONFIG_PACKAGE_kmod-crypto-crc32c=y
 CONFIG_PACKAGE_kmod-crypto-ctr=y
@@ -244,74 +221,55 @@ CONFIG_PACKAGE_kmod-crypto-sha512=y
 CONFIG_PACKAGE_kmod-crypto-user=y
 CONFIG_PACKAGE_kmod-crypto-xcbc=y
 CONFIG_PACKAGE_kmod-crypto-xxhash=y
-
 ### MTK WiFi 7 ###
-# CONFIG_PACKAGE_kmod-mt7996-firmware is not set
+# CONFIG_PACKAGE_kmod-mt7996-firmware is not set  # 板载无 MT7996 卡，用 MT7615
 # CONFIG_PACKAGE_kmod-mt7996-233-firmware is not set
 # CONFIG_PACKAGE_mt7988-wo-firmware is not set
 # CONFIG_PACKAGE_atenl is not set
-
 ### Mediatek PPE & Offload ###
 # CONFIG_NET_MEDIATEK_SOC_WED is not set
 CONFIG_PACKAGE_kmod-ipt-offload=y
 CONFIG_PACKAGE_kmod-ipt-nat-offload=y
-
 ### IRQBalance ###
 CONFIG_PACKAGE_irqbalance=y
 CONFIG_PACKAGE_luci-app-irqbalance=y
-
 ### TUN/TAP ###
 CONFIG_TUN=y
-
 ### PCIe ASPM Control ###
 CONFIG_PCIEASPM=y
 CONFIG_PCIEASPM_DEFAULT_OFF=y
-
-
 ### Flow Offload & SFE ###
 CONFIG_NF_FLOW_TABLE=y
-CONFIG_PACKAGE_kmod-ipt-offload=y
-CONFIG_PACKAGE_kmod-nft-offload=y
-# CONFIG_PACKAGE_kmod-fast-classifier is not set
 # CONFIG_SHORTCUT_FE is not set
-
 ### Hardware Crypto (MT7988 SAOT) ###
 CONFIG_CRYPTO_DEV_MEDIATEK=y
 CONFIG_PACKAGE_kmod-crypto-hw=y
-
 ### Extreme Optimization: CPU Performance Mode ###
 # CONFIG_CPU_FREQ_GOV_PERFORMANCE is not set
 # Disable other governors to force performance
 CONFIG_CPU_FREQ_GOV_SCHEDUTIL=y
-
 ### Extreme Optimization: Transparent Huge Pages ###
 #    278|CONFIG_TRANSPARENT_HUGEPAGES=y
 #    279|CONFIG_TRANSPARENT_HUGEPAGE_ALWAYS=y
-
 ### System Responsiveness ###
 # Preemptible Kernel (Voluntary) - Balances throughput and latency
 CONFIG_PREEMPT_VOLUNTARY=y
 # CONFIG_PREEMPT_NONE is not set
 # CONFIG_PREEMPT is not set
-
 # Timer Frequency (250Hz is good balance, 1000Hz is desktop)
 CONFIG_HZ_250=y
 CONFIG_HZ=250
-
 # I/O Schedulers
 CONFIG_IOSCHED_BFQ=y
 CONFIG_IOSCHED_DEADLINE=y
 CONFIG_DEFAULT_DEADLINE=y
 # CONFIG_DEFAULT_CFQ is not set
 # CONFIG_DEFAULT_NOOP is not set
-
 ### Network Latency (FQ_CODEL) ###
 CONFIG_NET_SCH_FQ_CODEL=y
 CONFIG_NET_SCH_CAKE=y
-
 ### Lock Kernel to 6.6 ###
-CONFIG_LINUX_6_6=y
-
+CONFIG_LINUX_6_12=y
 ### U-Boot & A/B Support
 CONFIG_PACKAGE_uboot-envtools=y
 # Keep BPI-R4 builds on the MT7988 bootloader variants we actually use.
@@ -321,3 +279,65 @@ CONFIG_PACKAGE_uboot-envtools=y
 # CONFIG_PACKAGE_trusted-firmware-a-mt7986-ram-ddr4 is not set
 # CONFIG_PACKAGE_trusted-firmware-a-mt7988-ram-comb is not set
 # CONFIG_PACKAGE_trusted-firmware-a-mt7988-spim-nand-ubi-comb is not set
+CONFIG_PACKAGE_nikki=y
+# CONFIG_PACKAGE_mihomo-meta is not set
+CONFIG_PACKAGE_kmod-nft-tproxy=y
+CONFIG_PACKAGE_kmod-nft-socket=y
+CONFIG_PACKAGE_nlbwmon=y
+CONFIG_PACKAGE_cloudflared=y
+CONFIG_PACKAGE_ip-full=y
+CONFIG_PACKAGE_luci-theme-vantage=y
+CONFIG_PACKAGE_luci-app-vantage=y
+CONFIG_PACKAGE_luci-app-vantage-traffic=y
+CONFIG_PACKAGE_bash=y
+CONFIG_PACKAGE_jq=y
+CONFIG_PACKAGE_unzip=y
+CONFIG_PACKAGE_fdisk=y
+CONFIG_PACKAGE_ipset=y
+CONFIG_PACKAGE_iputils-arping=y
+CONFIG_PACKAGE_etherwake=y
+CONFIG_PACKAGE_block-mount=y
+CONFIG_PACKAGE_ca-certificates=y
+CONFIG_PACKAGE_socat=y
+CONFIG_PACKAGE_ttyd=y
+CONFIG_PACKAGE_microsocks=y
+CONFIG_PACKAGE_haproxy=y
+CONFIG_PACKAGE_luci-app-ttyd=y
+CONFIG_PACKAGE_luci-app-wol=y
+CONFIG_PACKAGE_coreutils=y
+CONFIG_PACKAGE_coreutils-base64=y
+CONFIG_PACKAGE_coreutils-nohup=y
+CONFIG_PACKAGE_coreutils-timeout=y
+CONFIG_PACKAGE_i2c-tools=y
+CONFIG_PACKAGE_iperf3=y
+CONFIG_PACKAGE_f2fsck=y
+CONFIG_PACKAGE_ubi-utils=y
+CONFIG_PACKAGE_fitblk=y
+CONFIG_PACKAGE_luci-app-nlbwmon=y
+CONFIG_PACKAGE_vnstat2=y
+CONFIG_PACKAGE_luci-app-vnstat2=y
+CONFIG_PACKAGE_mc=y
+CONFIG_PACKAGE_luci-app-commands=y
+CONFIG_PACKAGE_owut=y
+CONFIG_PACKAGE_luci-app-advanced-reboot=y
+CONFIG_PACKAGE_v2ray-geoip=y
+CONFIG_PACKAGE_v2ray-geosite=y
+CONFIG_PACKAGE_kmod-mt7615e=y
+CONFIG_PACKAGE_kmod-mt7615-firmware=y
+CONFIG_PACKAGE_kmod-mt76-core=y
+CONFIG_PACKAGE_kmod-mt76-connac=y
+CONFIG_PACKAGE_kmod-cfg80211=y
+CONFIG_PACKAGE_kmod-mac80211=y
+CONFIG_PACKAGE_wpad-basic-mbedtls=y
+CONFIG_PACKAGE_iw=y
+CONFIG_PACKAGE_iwinfo=y
+CONFIG_PACKAGE_wireless-regdb=y
+CONFIG_PACKAGE_wifi-scripts=y
+CONFIG_PACKAGE_vlmcsd=y
+CONFIG_PACKAGE_luci-app-cloudflared=y
+CONFIG_PACKAGE_mihomo=y
+# CONFIG_PACKAGE_ip-tiny is not set
+# CONFIG_PACKAGE_nginx-ssl is not set
+# CONFIG_PACKAGE_uwsgi is not set
+CONFIG_PACKAGE_odhcp6c=y
+CONFIG_PACKAGE_odhcpd-ipv6only=y

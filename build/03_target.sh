@@ -35,13 +35,13 @@ done
 # --- Auto-generate version from git tag ---
 echo "[TARGET] Generating version info from git tag"
 git_tag="$(git describe --tags --long 2>/dev/null || echo 'unknown')"
-# v24.10.6-0-gec8eeaa -> 24.10.6 (if exactly on tag) or 24.10.6-3-gabc1234
+# v25.12.6-0-gec8eeaa -> 24.10.6 (if exactly on tag) or 24.10.6-3-gabc1234
 if [[ "$git_tag" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)-0- ]]; then
   version_number="${BASH_REMATCH[1]}"
 else
   version_number="${git_tag#v}"
 fi
-# Parse commit count and hash from describe: v24.10.6-3-gabc1234 -> r3-abc1234
+# Parse commit count and hash from describe: v25.12.6-3-gabc1234 -> r3-abc1234
 if [[ "$git_tag" =~ v[0-9.]+-([0-9]+)-g([0-9a-f]+) ]]; then
   version_code="r${BASH_REMATCH[1]}-${BASH_REMATCH[2]}"
 else

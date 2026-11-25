@@ -310,7 +310,7 @@ CONFIG_NET_SCH_FQ_CODEL=y
 CONFIG_NET_SCH_CAKE=y
 
 ### Lock Kernel to 6.6 ###
-CONFIG_LINUX_6_6=y
+CONFIG_LINUX_6_12=y
 
 ### U-Boot & A/B Support
 CONFIG_PACKAGE_uboot-envtools=y
