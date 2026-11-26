@@ -530,6 +530,29 @@ else
 fi
 
 # ===========================================================================
+# ===========================================================================
+# BPI-R4 A/B slot support
+# ===========================================================================
+# filogic.mk / platform.sh 是整文件覆盖；内核 dtso 补丁放 patches-6.12。
+# 三者缺一：分区没有 production_b、sysupgrade 不写对侧槽、fitblk 的 overlay
+# 会跟着固定的 rootdisk 写回 A 槽。
+if [ -d ../patches/mediatek ]; then
+  echo "[PREP] === A/B slot support ==="
+  if [ -f ../patches/mediatek/filogic.mk ]; then
+    cp -f ../patches/mediatek/filogic.mk ./target/linux/mediatek/image/filogic.mk
+    echo "[PREP] filogic.mk: sdmmc-ab/emmc-ab GPT + dual-slot image"
+  fi
+  if [ -f ../patches/mediatek/platform.sh ]; then
+    cp -f ../patches/mediatek/platform.sh ./target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh
+    echo "[PREP] platform.sh: ab_do_upgrade writes the inactive slot"
+  fi
+  if [ -d ../patches/mediatek/patches-6.12 ]; then
+    mkdir -p ./target/linux/mediatek/patches-6.12
+    cp -f ../patches/mediatek/patches-6.12/*.patch ./target/linux/mediatek/patches-6.12/ 2>/dev/null && \
+      echo "[PREP] kernel: rootdisk-{emmc,sd}-a/-b so fitblk follows the slot"
+  fi
+fi
+
 # Final: Rootfs overlay + cleanup
 # ===========================================================================
 echo "[PREP] === Rootfs overlay ==="

@@ -1,0 +1,36 @@
+--- a/arch/arm64/boot/dts/mediatek/mt7988a-bananapi-bpi-r4-emmc.dtso
++++ b/arch/arm64/boot/dts/mediatek/mt7988a-bananapi-bpi-r4-emmc.dtso
+@@ -47,10 +47,15 @@
+ 			emmc_rootfs: block-partition-production {
+ 				partname = "production";
+ 			};
++			emmc_rootfs_b: block-partition-production_b {
++				partname = "production_b";
++			};
+ 		};
+ 	};
+ };
+ 
+ &{/chosen} {
+ 	rootdisk-emmc = <&emmc_rootfs>;
++	rootdisk-emmc-a = <&emmc_rootfs>;
++	rootdisk-emmc-b = <&emmc_rootfs_b>;
+ };
+--- a/arch/arm64/boot/dts/mediatek/mt7988a-bananapi-bpi-r4-sd.dtso
++++ b/arch/arm64/boot/dts/mediatek/mt7988a-bananapi-bpi-r4-sd.dtso
+@@ -45,10 +45,15 @@
+ 			sd_rootfs: block-partition-production {
+ 				partname = "production";
+ 			};
++			sd_rootfs_b: block-partition-production_b {
++				partname = "production_b";
++			};
+ 		};
+ 	};
+ };
+ 
+ &{/chosen} {
+ 	rootdisk-sd = <&sd_rootfs>;
++	rootdisk-sd-a = <&sd_rootfs>;
++	rootdisk-sd-b = <&sd_rootfs_b>;
+ };
